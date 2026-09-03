@@ -26,14 +26,10 @@
                 <button type="button" onclick="refreshAll()" class="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs sm:text-sm font-semibold rounded-xl transition cursor-pointer">
                     🔄 刷新同步
                 </button>
-                <!-- 隐藏模块管理解锁入口 -->
-                <button type="button" onclick="toggleManagementMode()" id="mgmtUnlockBtn" class="px-3.5 py-2 bg-slate-900 hover:bg-black text-white text-xs sm:text-sm font-bold rounded-xl transition cursor-pointer">
-                    🔒 管理模式 (未解锁)
-                </button>
             </div>
         </div>
 
-        <!-- 导航标签页 -->
+        <!-- 导航标签页 (Subcon 与 Marco 默认直接显示) -->
         <div class="flex border-b border-slate-200 gap-1 sm:gap-2 overflow-x-auto pb-1">
             <button id="navWorkersBtn" type="button" onclick="switchMainTab('workers')"
                 class="px-3 sm:px-4 py-2.5 text-xs sm:text-sm font-bold border-b-2 border-indigo-600 text-indigo-600 transition flex items-center gap-1.5 whitespace-nowrap cursor-pointer">
@@ -43,13 +39,12 @@
                 class="px-3 sm:px-4 py-2.5 text-xs sm:text-sm font-bold border-b-2 border-transparent text-slate-500 hover:text-indigo-600 transition flex items-center gap-1.5 whitespace-nowrap cursor-pointer">
                 📋 工人打卡/借款流水明细
             </button>
-            <!-- 默认隐藏的敏感模块 -->
             <button id="navSubconBtn" type="button" onclick="switchMainTab('subcon')"
-                class="px-3 sm:px-4 py-2.5 text-xs sm:text-sm font-bold border-b-2 border-transparent text-slate-500 hover:text-indigo-600 transition items-center gap-1.5 whitespace-nowrap cursor-pointer hidden">
+                class="px-3 sm:px-4 py-2.5 text-xs sm:text-sm font-bold border-b-2 border-transparent text-slate-500 hover:text-indigo-600 transition flex items-center gap-1.5 whitespace-nowrap cursor-pointer">
                 📑 Subcon 分包与垫付
             </button>
             <button id="navPettyCashBtn" type="button" onclick="switchMainTab('pettyCash')"
-                class="px-3 sm:px-4 py-2.5 text-xs sm:text-sm font-bold border-b-2 border-transparent text-slate-500 hover:text-indigo-600 transition items-center gap-1.5 whitespace-nowrap cursor-pointer hidden">
+                class="px-3 sm:px-4 py-2.5 text-xs sm:text-sm font-bold border-b-2 border-transparent text-slate-500 hover:text-indigo-600 transition flex items-center gap-1.5 whitespace-nowrap cursor-pointer">
                 💼 Marco 现金收支与Claim
             </button>
             <button id="navSiteSearchBtn" type="button" onclick="switchMainTab('siteSearch')"
@@ -68,7 +63,6 @@
     <!-- ============================================================== -->
     <div id="tabWorkers" class="space-y-4 sm:space-y-6">
         
-        <!-- 批量打卡 (默认工时模式，勾选移到第一行) -->
         <div class="bg-white p-4 sm:p-5 rounded-2xl shadow-sm space-y-4">
             <div class="flex items-center justify-between border-b pb-3">
                 <h2 class="text-sm sm:text-base font-bold text-slate-800 flex items-center gap-1.5">
@@ -79,7 +73,6 @@
 
             <form onsubmit="handleAttendanceSubmit(event)" class="space-y-4">
                 
-                <!-- 1. 勾选出勤工人移至第一行 -->
                 <div class="bg-slate-50 p-3 rounded-xl border border-slate-200">
                     <div class="flex items-center justify-between mb-1.5">
                         <label class="text-xs font-bold text-slate-700">📌 第一步：勾选出勤工人：</label>
@@ -105,7 +98,6 @@
                     </div>
                     <div>
                         <label class="block text-xs font-semibold text-slate-600 mb-1">工时记录模式</label>
-                        <!-- 默认选中直接填工时 -->
                         <select id="attRecordMode" onchange="toggleTimeMode()" class="w-full px-3 py-2 border rounded-xl text-sm bg-white">
                             <option value="hours" selected>直接填工时 (如: 4 或 8.5 小时)</option>
                             <option value="time">精确打卡时间 (自动算小时)</option>
@@ -126,7 +118,7 @@
 
                 <div id="modeHoursArea" class="bg-slate-50 p-3 rounded-xl border border-slate-200">
                     <label class="block text-xs font-semibold text-slate-600 mb-1">在该工地工作时长 (小时)</label>
-                    <input type="number" step="0.5" id="attDirectHours" value="8" placeholder="例如：4（跑半天）或 8（正常全天）" class="w-full px-3 py-2 border rounded-xl text-sm bg-white font-bold text-indigo-700">
+                    <input type="number" step="0.5" id="attDirectHours" value="8" placeholder="例如：4 或 8" class="w-full px-3 py-2 border rounded-xl text-sm bg-white font-bold text-indigo-700">
                 </div>
 
                 <div>
@@ -140,7 +132,6 @@
             </form>
         </div>
 
-        <!-- 借钱 / 买料代扣 -->
         <div class="bg-white p-4 sm:p-5 rounded-2xl shadow-sm space-y-4">
             <h2 class="text-sm sm:text-base font-bold text-slate-800 border-b pb-3">
                 💵 工人借钱预支与扣款登记
@@ -195,7 +186,6 @@
             </form>
         </div>
 
-        <!-- 月度薪资结算总表 (支持到2027/2028及更多年份，自动过滤无工时员工) -->
         <div class="bg-white rounded-2xl shadow-sm overflow-hidden space-y-3 p-4 sm:p-5">
             <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-3 border-b pb-3">
                 <div>
@@ -231,7 +221,7 @@
     </div>
 
     <!-- ============================================================== -->
-    <!-- SECTION 2: 全量打卡/借款明细表 (支持收缩、日期搜索、编辑修改)   -->
+    <!-- SECTION 2: 全量打卡/借款明细表                                   -->
     <!-- ============================================================== -->
     <div id="tabDailyDetail" class="space-y-4 sm:space-y-6 hidden">
         <div class="bg-white rounded-2xl shadow-sm p-4 sm:p-5 space-y-4">
@@ -241,7 +231,6 @@
                     <p class="text-xs text-slate-500">按年月自动收缩分组，支持日期搜索，并可随时编辑修改工时与备注</p>
                 </div>
                 <div class="flex flex-wrap items-center gap-2">
-                    <!-- 日期搜索输入框 -->
                     <div class="flex items-center gap-1">
                         <input type="date" id="detailSearchDate" onchange="renderDailyDetailTable()" placeholder="搜索日期" class="px-3 py-1.5 border rounded-xl text-xs bg-white">
                         <button onclick="document.getElementById('detailSearchDate').value=''; renderDailyDetailTable();" class="px-2 py-1.5 bg-slate-100 text-xs rounded-xl text-slate-600 cursor-pointer">重置日期</button>
@@ -255,13 +244,11 @@
                 </div>
             </div>
 
-            <!-- 出勤每日流水表 (按年月收缩容器) -->
             <div class="space-y-3">
                 <h3 class="text-xs font-bold text-indigo-900 uppercase">工人工时出勤流水 (按年月收缩分组)</h3>
                 <div id="dailyAttendanceGroupContainer" class="space-y-2"></div>
             </div>
 
-            <!-- 借款每日流水表 (按年月收缩容器) -->
             <div class="space-y-3 pt-4 border-t">
                 <h3 class="text-xs font-bold text-amber-900 uppercase">工人预支借钱 / 代扣明细 (按年月收缩分组)</h3>
                 <div id="dailyAdvanceGroupContainer" class="space-y-2"></div>
@@ -270,10 +257,9 @@
     </div>
 
     <!-- ============================================================== -->
-    <!-- SECTION 3: Subcon 分包与垫付管理 (默认隐藏，密码解锁)             -->
+    <!-- SECTION 3: Subcon 分包与垫付管理 (常驻显示)                      -->
     <!-- ============================================================== -->
     <div id="tabSubcon" class="space-y-4 sm:space-y-6 hidden">
-        <!-- 统计面板 -->
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div class="bg-white p-4 rounded-xl shadow-sm border-l-4 border-indigo-500">
                 <div class="text-xs text-slate-500">本月 Marco/私人垫付总计</div>
@@ -292,7 +278,6 @@
             </div>
         </div>
 
-        <!-- 建立合同 (带签约日期) -->
         <div class="bg-white p-4 sm:p-5 rounded-2xl shadow-sm space-y-3">
             <h2 class="text-sm sm:text-base font-bold text-slate-800 border-b pb-2.5">➕ 建立 Subcon 分包工程合同</h2>
             <form onsubmit="handleNewSubconSubmit(event)" class="grid grid-cols-1 sm:grid-cols-5 gap-3">
@@ -320,7 +305,6 @@
             </form>
         </div>
 
-        <!-- 支出与先拿钱登记 -->
         <div class="bg-white p-4 sm:p-5 rounded-2xl shadow-sm space-y-3">
             <h2 class="text-sm sm:text-base font-bold text-slate-800 border-b pb-2.5">💳 Subcon 先拿钱 / 进度款支出登记</h2>
             <form onsubmit="handleSubconPaymentSubmit(event)" class="space-y-3">
@@ -378,18 +362,16 @@
             </form>
         </div>
 
-        <!-- 对账看板 -->
         <div class="bg-white rounded-2xl shadow-sm p-4 sm:p-5 space-y-4">
-            <h3 class="font-bold text-slate-900 text-sm sm:text-base border-b pb-2">📋 Subcon 工程对账单与领款清单 (支持修改编辑)</h3>
+            <h3 class="font-bold text-slate-900 text-sm sm:text-base border-b pb-2">📋 Subcon 工程对账单与领款清单 (支持修改编辑与删除合同)</h3>
             <div id="subconCardsContainer" class="space-y-4"></div>
         </div>
     </div>
 
     <!-- ============================================================== -->
-    <!-- SECTION 4: Marco 现金收支与 Claim 模块 (默认隐藏，带公司/店铺名) -->
+    <!-- SECTION 4: Marco 现金收支与 Claim 模块 (常驻显示)                -->
     <!-- ============================================================== -->
     <div id="tabPettyCash" class="space-y-4 sm:space-y-6 hidden">
-        <!-- 总结算面板 -->
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div class="bg-gradient-to-br from-rose-500 to-rose-700 text-white p-4 rounded-xl shadow-sm">
                 <div class="text-xs opacity-80 uppercase font-semibold">Marco 垫付总额 (OUT)</div>
@@ -408,7 +390,6 @@
             </div>
         </div>
 
-        <!-- 记一笔 (带公司/店铺名字段) -->
         <div class="bg-white p-4 sm:p-5 rounded-2xl shadow-sm space-y-4">
             <h2 class="text-base font-bold text-slate-900 border-b pb-2.5">✍️ 记录现金流水 (买料/维修垫付 或 工地收现)</h2>
             <form onsubmit="handlePettyCashSubmit(event)" class="space-y-3">
@@ -467,7 +448,6 @@
             </form>
         </div>
 
-        <!-- 备用金流水表 (支持按年月收缩与搜索) -->
         <div class="bg-white rounded-2xl shadow-sm p-4 sm:p-5 space-y-4">
             <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-2 border-b pb-3">
                 <div>
@@ -476,7 +456,6 @@
                 </div>
             </div>
 
-            <!-- 流水账本收缩分组容器 -->
             <div id="pettyCashGroupContainer" class="space-y-3"></div>
         </div>
     </div>
@@ -500,7 +479,6 @@
                 </button>
             </div>
 
-            <!-- 搜索统计看板 -->
             <div id="siteSearchStats" class="grid grid-cols-1 sm:grid-cols-3 gap-3 hidden">
                 <div class="bg-indigo-50 border border-indigo-200 p-4 rounded-xl">
                     <div class="text-xs text-indigo-600 font-bold">该工地总工钱支出 (RM)</div>
@@ -516,7 +494,6 @@
                 </div>
             </div>
 
-            <!-- 该工地员工明细表格 -->
             <div class="space-y-2 pt-2">
                 <h3 class="text-xs font-bold text-slate-700 uppercase">该工地全部员工工作明细记录：</h3>
                 <div class="overflow-x-auto">
@@ -541,13 +518,12 @@
     </div>
 
     <!-- ============================================================== -->
-    <!-- SECTION 6: 基础名录管理 (含密码保护、解除隐藏功能)               -->
+    <!-- SECTION 6: 基础名录管理 (含永久删除已隐藏工地)                   -->
     <!-- ============================================================== -->
     <div id="tabManage" class="space-y-4 sm:space-y-6 hidden">
         
-        <!-- 预设工人名单 (编辑/注销带安全锁) -->
         <div class="bg-white p-4 sm:p-5 rounded-2xl shadow-sm space-y-3">
-            <h2 class="text-sm sm:text-base font-bold text-slate-800 border-b pb-2.5">👤 预先注册工人档案 (带工种类型)</h2>
+            <h2 class="text-sm sm:text-base font-bold text-slate-800 border-b pb-2.5">👤 预先注册工人档案 (带工种专属颜色类型)</h2>
             <form onsubmit="handleNewWorkerSubmit(event)" class="grid grid-cols-1 sm:grid-cols-5 gap-3">
                 <div>
                     <label class="block text-xs font-semibold text-slate-600 mb-1">工人全名</label>
@@ -597,9 +573,8 @@
             </div>
         </div>
 
-        <!-- 预设工地管理 (含隐藏与解除隐藏入口) -->
         <div class="bg-white p-4 sm:p-5 rounded-2xl shadow-sm space-y-3">
-            <h2 class="text-sm sm:text-base font-bold text-slate-800 border-b pb-2.5">🏢 预先添加与管理工地名称 (支持隐藏与解除隐藏)</h2>
+            <h2 class="text-sm sm:text-base font-bold text-slate-800 border-b pb-2.5">🏢 预先添加与管理工地名称 (支持隐藏、恢复与彻底删除)</h2>
             <form onsubmit="handleNewSiteSubmit(event)" class="flex gap-2">
                 <input type="text" id="newSiteName" required placeholder="输入新工地名，如: Kamunting 新厂房B区" class="flex-1 px-3 py-2 border rounded-xl text-sm">
                 <button type="submit" class="px-5 py-2 bg-slate-800 hover:bg-black text-white font-bold rounded-xl text-sm cursor-pointer">
@@ -611,7 +586,7 @@
                 <div id="siteTagsArea" class="space-y-2"></div>
             </div>
             <div class="pt-3 border-t">
-                <h3 class="text-xs font-bold text-slate-600 mb-1">已隐藏工地列表 (可通过解除隐藏恢复)：</h3>
+                <h3 class="text-xs font-bold text-slate-600 mb-1">已隐藏工地列表 (可解除隐藏恢复，或直接彻底删除)：</h3>
                 <div id="archivedSiteTagsArea" class="space-y-2"></div>
             </div>
         </div>
@@ -620,7 +595,7 @@
 
 </div>
 
-<!-- 弹窗 1: 编辑工人资料 (安全锁校验) -->
+<!-- 弹窗 1: 编辑工人资料 -->
 <div id="editWorkerModal" class="hidden fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
     <div class="bg-white rounded-2xl shadow-xl max-w-md w-full p-5 space-y-3">
         <h3 class="text-base font-bold text-slate-900 border-b pb-2">✏️ 修改员工档案 (管理操作安全锁)</h3>
@@ -680,7 +655,7 @@
     </div>
 </div>
 
-<!-- 弹窗 3: 书记确认 Claimed (强制输入 PV Number) -->
+<!-- 弹窗 3: 书记确认 Claimed -->
 <div id="claimPvModal" class="hidden fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
     <div class="bg-white rounded-2xl shadow-xl max-w-sm w-full p-5 space-y-3">
         <h3 class="text-base font-bold text-slate-900 border-b pb-2">🧾 确认已报销付款 (Claimed)</h3>
@@ -744,9 +719,6 @@
 </div>
 
 <script>
-    // ==============================================================
-    // 1. 系统配置与Supabase连接
-    // ==============================================================
     const SUPABASE_URL = "https://xiplmlalurpnrnzeaywp.supabase.co/rest/v1";
     const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhpcGxtbGFsdXJwbnJuemVheXdwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg0Mjk2NjYsImV4cCI6MjEwNDAwNTY2Nn0.uIRTO0MAvQHGzQzdWwWZCufeMsnuU9LQTHUOI60lTXQ";
 
@@ -757,7 +729,6 @@
         "Prefer": "return=representation"
     };
 
-    // 内存数据
     let workersList = [];
     let sitesList = [];
     let attendanceList = [];
@@ -766,9 +737,6 @@
     let subconPayments = [];
     let subconVos = [];
     let pettyCashList = [];
-
-    // 访问权限控制状态
-    let isManagementUnlocked = false;
 
     function initSystemDates() {
         const now = new Date();
@@ -810,30 +778,6 @@
         renderSubconDashboard();
         renderPettyCashTable();
         populateSiteSearchDropdown();
-    }
-
-    function toggleManagementMode() {
-        if (isManagementUnlocked) {
-            isManagementUnlocked = false;
-            document.getElementById('mgmtUnlockBtn').innerText = "🔒 管理模式 (未解锁)";
-            document.getElementById('mgmtUnlockBtn').className = "px-3.5 py-2 bg-slate-900 hover:bg-black text-white text-xs sm:text-sm font-bold rounded-xl transition cursor-pointer";
-            document.getElementById('navSubconBtn').classList.add('hidden');
-            document.getElementById('navPettyCashBtn').classList.add('hidden');
-            alert("已退出管理模式，敏感模块已重新隐藏。");
-            switchMainTab('workers');
-        } else {
-            const pwd = prompt("请输入管理密码：");
-            if (pwd === "8888") {
-                isManagementUnlocked = true;
-                document.getElementById('mgmtUnlockBtn').innerText = "🔓 管理模式 (已解锁)";
-                document.getElementById('mgmtUnlockBtn').className = "px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs sm:text-sm font-bold rounded-xl transition cursor-pointer";
-                document.getElementById('navSubconBtn').classList.remove('hidden');
-                document.getElementById('navPettyCashBtn').classList.remove('hidden');
-                alert("✅ 管理密码正确！Subcon分包与Marco现金模块已解锁显示。");
-            } else if (pwd !== null) {
-                alert("❌ 密码错误！");
-            }
-        }
     }
 
     function switchMainTab(tab) {
@@ -881,9 +825,19 @@
         document.getElementById('payNote').value = "Advance";
     }
 
-    // ==============================================================
-    // 2. 基础名录 (工人、工地隐藏与解除隐藏)
-    // ==============================================================
+    // 工种专属颜色渲染函数
+    function getWorkerTypeBadge(type) {
+        let cleanType = (type || '中工').trim();
+        let bgClass = "bg-blue-100 text-blue-800"; // 默认中工蓝色
+        if (cleanType.includes('头手')) {
+            bgClass = "bg-purple-100 text-purple-800 font-bold"; // 头手紫色
+        } else if (cleanType.includes('杂工')) {
+            bgClass = "bg-amber-100 text-amber-800 font-bold"; // 杂工琥珀色
+        }
+        return `<span class="px-2 py-0.5 rounded text-[11px] ${bgClass}">${escapeHtml(cleanType)}</span>`;
+    }
+
+    // 2. 基础名录
     async function fetchWorkers() {
         try {
             const res = await fetch(`${SUPABASE_URL}/workers?order=name.asc`, { headers: reqHeaders });
@@ -978,7 +932,10 @@
                 div.className = "flex items-center justify-between p-2 bg-amber-50/50 border border-amber-200 rounded-xl text-xs";
                 div.innerHTML = `
                     <span class="text-slate-500 line-through">📍 ${escapeHtml(s.site_name)}</span>
-                    <button type="button" onclick="updateSiteStatus(${s.id}, 'active')" class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg cursor-pointer">解除隐藏 (恢复)</button>
+                    <div class="space-x-2">
+                        <button type="button" onclick="updateSiteStatus(${s.id}, 'active')" class="px-2 py-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg cursor-pointer">解除隐藏 (恢复)</button>
+                        <button type="button" onclick="permanentDeleteSite(${s.id}, '${escapeHtml(s.site_name)}')" class="px-2 py-1 bg-rose-600 hover:bg-rose-700 text-white font-bold rounded-lg cursor-pointer">彻底删除</button>
+                    </div>
                 `;
                 archivedTagsArea.appendChild(div);
             });
@@ -1018,7 +975,7 @@
             tbody.innerHTML += `
                 <tr class="hover:bg-slate-50 ${!isActive ? 'opacity-60 bg-slate-100' : ''}">
                     <td class="p-2.5 font-bold text-slate-800">${escapeHtml(w.name)} ${!isActive ? '<span class="text-xs text-rose-500">(已注销)</span>' : ''}</td>
-                    <td class="p-2.5"><span class="px-2 py-0.5 rounded text-[11px] font-bold bg-indigo-50 text-indigo-700">${escapeHtml(w.worker_type || '中工')}</span></td>
+                    <td class="p-2.5">${getWorkerTypeBadge(w.worker_type)}</td>
                     <td class="p-2.5 text-slate-500 font-mono text-xs">${escapeHtml(w.ic_passport)}</td>
                     <td class="p-2.5 font-semibold text-indigo-700">RM ${Number(w.daily_rate).toFixed(2)}</td>
                     <td class="p-2.5 text-slate-600 font-mono">RM ${Number(w.hourly_rate).toFixed(2)}/h</td>
@@ -1124,9 +1081,17 @@
         await fetchSites();
     }
 
-    // ==============================================================
-    // 3. 工人出勤打卡与月结计算
-    // ==============================================================
+    async function permanentDeleteSite(id, siteName) {
+        if (!confirm(`⚠️ 确定要彻底删除工地 [${siteName}] 吗？此操作无法撤销！`)) return;
+        await fetch(`${SUPABASE_URL}/job_sites?id=eq.${id}`, {
+            method: "DELETE",
+            headers: reqHeaders
+        });
+        await fetchSites();
+        alert(`工地 [${siteName}] 已彻底删除！`);
+    }
+
+    // 3. 出勤打卡与月结
     async function fetchAttendance() {
         try {
             const res = await fetch(`${SUPABASE_URL}/attendance_records?order=work_date.desc,id.desc`, { headers: reqHeaders });
@@ -1232,7 +1197,6 @@
         alert('借款/代扣已成功登记！');
     }
 
-    // 月结看板 (自动过滤当月无工时员工)
     function renderWorkerMonthlySummary() {
         const month = document.getElementById('filterMonth').value;
         const tbody = document.getElementById('workerMonthlyBody');
@@ -1252,7 +1216,6 @@
                 }
             });
 
-            // 当月无工时则直接跳过不显示
             if (totalHours <= 0 && grossPay <= 0) return;
             displayedCount++;
 
@@ -1268,7 +1231,7 @@
             tbody.innerHTML += `
                 <tr class="hover:bg-slate-50">
                     <td class="p-3 font-bold text-slate-900">${escapeHtml(w.name)}</td>
-                    <td class="p-3"><span class="px-2 py-0.5 rounded text-[11px] font-bold bg-indigo-50 text-indigo-700">${escapeHtml(w.worker_type || '中工')}</span></td>
+                    <td class="p-3">${getWorkerTypeBadge(w.worker_type)}</td>
                     <td class="p-3 text-slate-600">RM ${Number(w.daily_rate).toFixed(0)}</td>
                     <td class="p-3 font-mono font-bold text-indigo-700">${totalHours.toFixed(1)} h</td>
                     <td class="p-3 font-mono font-semibold text-slate-800">RM ${grossPay.toFixed(2)}</td>
@@ -1300,15 +1263,12 @@
         }
     }
 
-    // ==============================================================
-    // 4. 明细表格 (带收缩分组、日期搜索与编辑修改)
-    // ==============================================================
+    // 4. 明细表格
     function renderDailyDetailTable() {
         const workerIdFilter = document.getElementById('detailWorkerFilter').value;
         const siteFilter = document.getElementById('detailSiteFilter').value;
         const searchDate = document.getElementById('detailSearchDate').value;
 
-        // 1. 出勤明细按年月收缩分组
         const attContainer = document.getElementById('dailyAttendanceGroupContainer');
         attContainer.innerHTML = '';
         
@@ -1322,7 +1282,6 @@
         if (filteredAtt.length === 0) {
             attContainer.innerHTML = '<div class="p-4 text-center text-slate-400 text-xs bg-slate-50 rounded-xl">暂无出勤流水记录</div>';
         } else {
-            // 按年月分组 (YYYY-MM)
             const groupedAtt = {};
             filteredAtt.forEach(att => {
                 const ym = (att.work_date || '').slice(0, 7) || '未知年月';
@@ -1334,7 +1293,7 @@
                 const records = groupedAtt[ym];
                 const details = document.createElement('details');
                 details.className = "border border-slate-200 rounded-xl bg-slate-50 overflow-hidden";
-                details.open = true; // 默认展开最近的
+                details.open = true;
 
                 details.innerHTML = `
                     <summary class="px-4 py-3 font-bold text-xs sm:text-sm bg-white cursor-pointer select-none flex justify-between items-center border-b">
@@ -1381,7 +1340,6 @@
             });
         }
 
-        // 2. 借款明细按年月收缩分组
         const advContainer = document.getElementById('dailyAdvanceGroupContainer');
         advContainer.innerHTML = '';
 
@@ -1450,7 +1408,6 @@
         }
     }
 
-    // 编辑考勤工时与备注弹窗逻辑
     function openEditAttendanceModal(id) {
         const att = attendanceList.find(item => item.id === id);
         if (!att) return;
@@ -1509,9 +1466,7 @@
         renderDailyDetailTable();
     }
 
-    // ==============================================================
-    // 5. Subcon 分包管理 (带签约日期)
-    // ==============================================================
+    // 5. Subcon 分包管理 (带删除合同功能)
     async function fetchSubconData() {
         try {
             const [cRes, pRes, vRes] = await Promise.all([
@@ -1672,6 +1627,9 @@
                         <button type="button" onclick="openVoModal(${c.id})" class="px-3 py-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs font-bold rounded-lg cursor-pointer">
                             ➕ 加 VO
                         </button>
+                        <button type="button" onclick="deleteSubconContract(${c.id}, '${escapeHtml(c.project_name)}')" class="px-3 py-1 bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-bold rounded-lg cursor-pointer">
+                            🗑️ 删除合同
+                        </button>
                     </div>
                 </div>
 
@@ -1691,6 +1649,17 @@
         });
 
         document.getElementById('subconAllContractsTotal').innerText = contractAllSum.toFixed(2);
+    }
+
+    async function deleteSubconContract(contractId, projectName) {
+        if (!confirm(`⚠️ 确定要彻底删除分包合同 [${projectName}] 吗？相关的 VO 追加和领款明细也会一并清除！`)) return;
+        await fetch(`${SUPABASE_URL}/subcon_contracts?id=eq.${contractId}`, {
+            method: "DELETE",
+            headers: reqHeaders
+        });
+        await fetchSubconData();
+        renderSubconDashboard();
+        alert(`分包合同 [${projectName}] 已成功删除！`);
     }
 
     function openEditSubconContractModal(id) {
@@ -1763,9 +1732,7 @@
         renderSubconDashboard();
     }
 
-    // ==============================================================
-    // 6. Marco 现金收支 (带公司/店铺名、收缩分组)
-    // ==============================================================
+    // 6. Marco 现金收支
     async function fetchPettyCash() {
         try {
             const res = await fetch(`${SUPABASE_URL}/marco_petty_cash?order=record_date.desc,record_time.desc`, { headers: reqHeaders });
@@ -1853,7 +1820,6 @@
             return;
         }
 
-        // 按年月收缩分组 (YYYY-MM)
         const groupedPetty = {};
         pettyCashList.forEach(item => {
             const ym = (item.record_date || '').slice(0, 7) || '未知年月';
@@ -1933,9 +1899,7 @@
         renderPettyCashTable();
     }
 
-    // ==============================================================
-    // 7. 工地综合搜索功能 (搜工地、列员工工作记录、算总工钱)
-    // ==============================================================
+    // 7. 工地综合搜索
     function populateSiteSearchDropdown() {
         const select = document.getElementById('searchSiteSelect');
         if(!select) return;
@@ -1978,7 +1942,7 @@
                 <tr class="hover:bg-slate-50">
                     <td class="p-2.5 font-mono text-slate-600">${att.work_date}</td>
                     <td class="p-2.5 font-bold text-slate-900">${escapeHtml(worker.name || '未知工人')}</td>
-                    <td class="p-2.5"><span class="px-2 py-0.5 rounded font-bold bg-indigo-50 text-indigo-700 text-xs">${escapeHtml(worker.worker_type || '中工')}</span></td>
+                    <td class="p-2.5">${getWorkerTypeBadge(worker.worker_type)}</td>
                     <td class="p-2.5 font-bold font-mono text-indigo-700">${Number(att.total_hours).toFixed(1)} h</td>
                     <td class="p-2.5 font-bold font-mono text-slate-800">RM ${Number(att.daily_wage).toFixed(2)}</td>
                     <td class="p-2.5 text-slate-500">${escapeHtml(att.note || '-')}</td>
@@ -1987,9 +1951,6 @@
         });
     }
 
-    // ==============================================================
-    // 8. 通用 Claim 弹窗与辅助函数
-    // ==============================================================
     function openClaimModal(targetType, id) {
         document.getElementById('claimTargetType').value = targetType;
         document.getElementById('claimTargetId').value = id;
