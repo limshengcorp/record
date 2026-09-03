@@ -90,7 +90,7 @@
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
                     <div>
                         <label class="block text-xs font-semibold text-slate-600 mb-1">工作日期</label>
-                        <input type="date" id="attWorkDate" required class="w-full px-3 py-2 border rounded-xl text-sm bg-white">
+                        <input type="date" id="attWorkDate" required class="w-full px-3 py-2 border rounded-xl text-sm bg-white cursor-pointer">
                     </div>
                     <div>
                         <label class="block text-xs font-semibold text-slate-600 mb-1">施工工地</label>
@@ -107,7 +107,7 @@
 
                 <!-- 直接工时模式 (默认展示) -->
                 <div id="modeHoursArea" class="bg-indigo-50/50 p-2.5 sm:p-3 rounded-xl border border-indigo-100">
-                    <label class="block text-xs font-bold text-indigo-900 mb-1">本次工作时长 (小时 / 可以填半天如 4、整天 8、加班 9 等)：</label>
+                    <label class="block text-xs font-bold text-indigo-900 mb-1">本次工作时长 (小时 / 填半天 4、整天 8、加班 9 等)：</label>
                     <input type="number" step="0.5" id="attDirectHours" value="8" placeholder="例如：8" class="w-full px-3 py-2 border border-indigo-300 rounded-xl text-sm bg-white font-bold text-indigo-700">
                 </div>
 
@@ -134,14 +134,14 @@
             </form>
         </div>
 
-        <!-- 操作卡片 2: 工人借钱 / 扣款 (带 1000 选项) -->
+        <!-- 操作卡片 2: 工人借钱 / 扣款 -->
         <div class="bg-white p-3.5 sm:p-5 rounded-2xl shadow-sm space-y-3">
             <h2 class="text-sm sm:text-base font-bold text-slate-800 border-b pb-2.5">💵 工人借钱预支与代扣</h2>
             <form onsubmit="handleAdvanceSubmit(event)" class="space-y-3">
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
                     <div>
                         <label class="block text-xs font-semibold text-slate-600 mb-1">借支日期</label>
-                        <input type="date" id="advDate" required class="w-full px-3 py-2 border rounded-xl text-sm bg-white">
+                        <input type="date" id="advDate" required class="w-full px-3 py-2 border rounded-xl text-sm bg-white cursor-pointer">
                     </div>
                     <div>
                         <label class="block text-xs font-semibold text-slate-600 mb-1">工人选择</label>
@@ -159,12 +159,12 @@
                 <div>
                     <label class="block text-xs font-semibold text-slate-600 mb-1">快捷点击借款数额 (RM)：</label>
                     <div class="flex flex-wrap gap-1.5">
-                        <button type="button" onclick="setAdvAmount(50)" class="px-3 py-1 bg-slate-100 hover:bg-amber-100 border border-slate-200 text-xs font-bold rounded-lg">RM 50</button>
-                        <button type="button" onclick="setAdvAmount(100)" class="px-3 py-1 bg-slate-100 hover:bg-amber-100 border border-slate-200 text-xs font-bold rounded-lg">RM 100</button>
-                        <button type="button" onclick="setAdvAmount(200)" class="px-3 py-1 bg-slate-100 hover:bg-amber-100 border border-slate-200 text-xs font-bold rounded-lg">RM 200</button>
-                        <button type="button" onclick="setAdvAmount(300)" class="px-3 py-1 bg-slate-100 hover:bg-amber-100 border border-slate-200 text-xs font-bold rounded-lg">RM 300</button>
-                        <button type="button" onclick="setAdvAmount(500)" class="px-3 py-1 bg-slate-100 hover:bg-amber-100 border border-slate-200 text-xs font-bold rounded-lg">RM 500</button>
-                        <button type="button" onclick="setAdvAmount(1000)" class="px-3 py-1 bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold rounded-lg shadow-sm">RM 1000</button>
+                        <button type="button" onclick="setAdvAmount(50)" class="px-3 py-1 bg-slate-100 hover:bg-amber-100 border border-slate-200 text-xs font-bold rounded-lg cursor-pointer">RM 50</button>
+                        <button type="button" onclick="setAdvAmount(100)" class="px-3 py-1 bg-slate-100 hover:bg-amber-100 border border-slate-200 text-xs font-bold rounded-lg cursor-pointer">RM 100</button>
+                        <button type="button" onclick="setAdvAmount(200)" class="px-3 py-1 bg-slate-100 hover:bg-amber-100 border border-slate-200 text-xs font-bold rounded-lg cursor-pointer">RM 200</button>
+                        <button type="button" onclick="setAdvAmount(300)" class="px-3 py-1 bg-slate-100 hover:bg-amber-100 border border-slate-200 text-xs font-bold rounded-lg cursor-pointer">RM 300</button>
+                        <button type="button" onclick="setAdvAmount(500)" class="px-3 py-1 bg-slate-100 hover:bg-amber-100 border border-slate-200 text-xs font-bold rounded-lg cursor-pointer">RM 500</button>
+                        <button type="button" onclick="setAdvAmount(1000)" class="px-3 py-1 bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold rounded-lg shadow-sm cursor-pointer">RM 1000</button>
                     </div>
                 </div>
 
@@ -196,7 +196,7 @@
                 </div>
                 <div class="flex items-center gap-2">
                     <label class="text-xs font-semibold text-slate-600">年份:</label>
-                    <select id="filterYearSelect" onchange="renderWorkerMonthlySummary()" class="px-2 py-1.5 border rounded-lg text-xs bg-white font-bold">
+                    <select id="filterYearSelect" onchange="renderWorkerMonthlySummary()" class="px-2 py-1.5 border rounded-lg text-xs bg-white font-bold cursor-pointer">
                         <option value="2025">2025</option>
                         <option value="2026" selected>2026</option>
                         <option value="2027">2027</option>
@@ -205,7 +205,7 @@
                         <option value="2030">2030</option>
                     </select>
                     <label class="text-xs font-semibold text-slate-600">月份:</label>
-                    <select id="filterMonthSelect" onchange="renderWorkerMonthlySummary()" class="px-2 py-1.5 border rounded-lg text-xs bg-white font-bold">
+                    <select id="filterMonthSelect" onchange="renderWorkerMonthlySummary()" class="px-2 py-1.5 border rounded-lg text-xs bg-white font-bold cursor-pointer">
                         <option value="01">1月</option><option value="02">2月</option><option value="03">3月</option>
                         <option value="04">4月</option><option value="05">5月</option><option value="06">6月</option>
                         <option value="07">7月</option><option value="08">8月</option><option value="09">9月</option>
@@ -231,25 +231,25 @@
                 </div>
             </div>
 
-            <!-- 工地搜索与日期筛选工具条 -->
+            <!-- 工地搜索与日期筛选 -->
             <div class="bg-indigo-50/60 p-3 rounded-xl border border-indigo-100 space-y-2">
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                     <div>
                         <label class="block text-xs font-bold text-indigo-900 mb-1">🔍 筛选特定施工工地：</label>
-                        <select id="detailSiteFilter" onchange="renderDailyDetailGroups()" class="w-full px-3 py-1.5 border border-indigo-200 rounded-xl text-xs bg-white font-bold text-indigo-900">
+                        <select id="detailSiteFilter" onchange="renderDailyDetailGroups()" class="w-full px-3 py-1.5 border border-indigo-200 rounded-xl text-xs bg-white font-bold text-indigo-900 cursor-pointer">
                             <option value="">全部工地 (不限)</option>
                         </select>
                     </div>
                     <div>
                         <label class="block text-xs font-bold text-slate-700 mb-1">📅 指定工作日期 (选填)：</label>
                         <div class="flex gap-2">
-                            <input type="date" id="detailDateSearch" onchange="renderDailyDetailGroups()" class="w-full px-2.5 py-1.5 border rounded-xl text-xs bg-white">
-                            <button type="button" onclick="clearDetailFilters()" class="px-3 py-1 bg-white border border-slate-200 text-xs text-slate-600 rounded-xl whitespace-nowrap hover:bg-slate-50">重置</button>
+                            <input type="date" id="detailDateSearch" onchange="renderDailyDetailGroups()" class="w-full px-2.5 py-1.5 border rounded-xl text-xs bg-white cursor-pointer">
+                            <button type="button" onclick="clearDetailFilters()" class="px-3 py-1 bg-white border border-slate-200 text-xs text-slate-600 rounded-xl whitespace-nowrap hover:bg-slate-50 cursor-pointer">重置</button>
                         </div>
                     </div>
                 </div>
 
-                <!-- 选定工地后的专属用工核算卡片 -->
+                <!-- 选定工地后的专属看板 -->
                 <div id="siteCostSummaryBox" class="hidden pt-2 border-t border-indigo-200 flex items-center justify-between">
                     <div>
                         <span class="text-xs font-bold text-indigo-900" id="summarySiteNameLabel">Kamunting 工业厂房</span>
@@ -262,13 +262,11 @@
                 </div>
             </div>
 
-            <!-- 考勤折叠分组容器 -->
             <div class="space-y-2.5 pt-1">
                 <div class="text-xs font-bold text-indigo-900">工人工时出勤明细 (按月折叠)：</div>
                 <div id="attGroupedContainer" class="space-y-2"></div>
             </div>
 
-            <!-- 借款流水折叠分组容器 -->
             <div class="space-y-2.5 pt-4 border-t">
                 <div class="text-xs font-bold text-amber-900">工人预支借钱 / 代扣明细 (按月折叠)：</div>
                 <div id="advGroupedContainer" class="space-y-2"></div>
@@ -300,8 +298,8 @@
             <h2 class="text-sm sm:text-base font-bold text-slate-800 border-b pb-2">➕ 建立 Subcon 分包合同</h2>
             <form onsubmit="handleNewSubconSubmit(event)" class="grid grid-cols-1 sm:grid-cols-4 gap-2.5">
                 <div>
-                    <label class="block text-xs font-semibold text-slate-600 mb-1">分包合同签约日期</label>
-                    <input type="date" id="subContractDate" required class="w-full px-3 py-2 border rounded-xl text-sm bg-white">
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">签约日期</label>
+                    <input type="date" id="subContractDate" required class="w-full px-3 py-2 border rounded-xl text-sm bg-white cursor-pointer">
                 </div>
                 <div>
                     <label class="block text-xs font-semibold text-slate-600 mb-1">工程项目名称</label>
@@ -333,7 +331,7 @@
                     </div>
                     <div>
                         <label class="block text-xs font-semibold text-slate-600 mb-1">出账时间</label>
-                        <input type="datetime-local" id="payDateTime" required class="w-full px-3 py-2 border rounded-xl text-sm bg-white">
+                        <input type="datetime-local" id="payDateTime" required class="w-full px-3 py-2 border rounded-xl text-sm bg-white cursor-pointer">
                     </div>
                     <div>
                         <label class="block text-xs font-semibold text-slate-600 mb-1">支付金额 (RM)</label>
@@ -345,7 +343,7 @@
                     <div>
                         <label class="block text-xs font-semibold text-slate-600 mb-1">出账性质与经手人</label>
                         <div class="flex gap-1.5">
-                            <select id="payPaidBy" onchange="togglePaymentSource()" class="w-1/2 px-2 py-1.5 border rounded-lg text-xs bg-white font-bold">
+                            <select id="payPaidBy" onchange="togglePaymentSource()" class="w-1/2 px-2 py-1.5 border rounded-lg text-xs bg-white font-bold cursor-pointer">
                                 <option value="私人先给">私人先垫付</option>
                                 <option value="公司转账">公司转账</option>
                             </select>
@@ -354,7 +352,7 @@
                     </div>
                     <div>
                         <label class="block text-xs font-semibold text-slate-600 mb-1">支付渠道</label>
-                        <select id="payMethod" class="w-full px-3 py-2 border rounded-xl text-sm bg-white font-semibold">
+                        <select id="payMethod" class="w-full px-3 py-2 border rounded-xl text-sm bg-white font-semibold cursor-pointer">
                             <option value="CASH">💵 现金 (CASH)</option>
                             <option value="TNG">📱 Touch 'n Go</option>
                             <option value="HLB">🏦 Hong Leong Bank</option>
@@ -364,7 +362,7 @@
                     <div>
                         <div class="flex items-center justify-between mb-1">
                             <label class="text-xs font-semibold text-slate-600">备注说明</label>
-                            <button type="button" onclick="setSubconNoteAdvance()" class="text-[10px] bg-amber-100 hover:bg-amber-200 text-amber-800 font-bold px-2 py-0.5 rounded">
+                            <button type="button" onclick="setSubconNoteAdvance()" class="text-[10px] bg-amber-100 hover:bg-amber-200 text-amber-800 font-bold px-2 py-0.5 rounded cursor-pointer">
                                 + 填入 "Advance"
                             </button>
                         </div>
@@ -408,18 +406,18 @@
                 <div class="grid grid-cols-1 sm:grid-cols-4 gap-2.5">
                     <div>
                         <label class="block text-xs font-semibold text-slate-600 mb-1">交易类型</label>
-                        <select id="pettyTransType" onchange="togglePettyCategory()" class="w-full px-3 py-2 border rounded-xl text-sm font-bold bg-white">
+                        <select id="pettyTransType" onchange="togglePettyCategory()" class="w-full px-3 py-2 border rounded-xl text-sm font-bold bg-white cursor-pointer">
                             <option value="OUT">🔴 OUT - Marco 垫付花钱 (待Claim)</option>
                             <option value="IN">🟢 IN - 工地现场收现 (卖废铁等)</option>
                         </select>
                     </div>
                     <div>
                         <label class="block text-xs font-semibold text-slate-600 mb-1">发生日期</label>
-                        <input type="date" id="pettyDate" required class="w-full px-3 py-2 border rounded-xl text-sm bg-white">
+                        <input type="date" id="pettyDate" required class="w-full px-3 py-2 border rounded-xl text-sm bg-white cursor-pointer">
                     </div>
                     <div>
                         <label class="block text-xs font-semibold text-slate-600 mb-1">发生时间</label>
-                        <input type="time" id="pettyTime" required class="w-full px-3 py-2 border rounded-xl text-sm bg-white">
+                        <input type="time" id="pettyTime" required class="w-full px-3 py-2 border rounded-xl text-sm bg-white cursor-pointer">
                     </div>
                     <div>
                         <label class="block text-xs font-semibold text-slate-600 mb-1">金额 (RM)</label>
@@ -434,7 +432,7 @@
                     </div>
                     <div>
                         <label class="block text-xs font-semibold text-slate-600 mb-1">款项分类</label>
-                        <select id="pettyCategory" class="w-full px-3 py-2 border rounded-xl text-sm bg-white font-medium">
+                        <select id="pettyCategory" class="w-full px-3 py-2 border rounded-xl text-sm bg-white font-medium cursor-pointer">
                             <option value="买料/工具">买料 / 现场五金工具</option>
                             <option value="维修/安装">机械维修 / 安装费</option>
                             <option value="工人杂支">现场杂支 / 伙食水钱</option>
@@ -554,8 +552,8 @@
             <input type="text" id="editAttNote" class="w-full px-3 py-2 border rounded-xl text-sm">
         </div>
         <div class="flex justify-end gap-2 pt-2 border-t">
-            <button type="button" onclick="closeEditAttModal()" class="px-3 py-1.5 bg-slate-100 rounded-lg text-xs font-semibold">取消</button>
-            <button type="button" onclick="submitEditAttendance()" class="px-3.5 py-1.5 bg-indigo-600 text-white rounded-lg text-xs font-bold">保存修改</button>
+            <button type="button" onclick="closeEditAttModal()" class="px-3 py-1.5 bg-slate-100 rounded-lg text-xs font-semibold cursor-pointer">取消</button>
+            <button type="button" onclick="submitEditAttendance()" class="px-3.5 py-1.5 bg-indigo-600 text-white rounded-lg text-xs font-bold cursor-pointer">保存修改</button>
         </div>
     </div>
 </div>
@@ -586,8 +584,8 @@
             <input type="number" step="0.5" id="editWorkerRate" class="w-full px-3 py-2 border rounded-xl text-sm font-bold text-indigo-700">
         </div>
         <div class="flex justify-end gap-2 pt-2 border-t">
-            <button type="button" onclick="closeEditWorkerModal()" class="px-3 py-1.5 bg-slate-100 rounded-lg text-xs font-semibold">取消</button>
-            <button type="button" onclick="submitEditWorker()" class="px-3.5 py-1.5 bg-indigo-600 text-white rounded-lg text-xs font-bold">保存更新</button>
+            <button type="button" onclick="closeEditWorkerModal()" class="px-3 py-1.5 bg-slate-100 rounded-lg text-xs font-semibold cursor-pointer">取消</button>
+            <button type="button" onclick="submitEditWorker()" class="px-3.5 py-1.5 bg-indigo-600 text-white rounded-lg text-xs font-bold cursor-pointer">保存更新</button>
         </div>
     </div>
 </div>
@@ -604,8 +602,8 @@
             <input type="text" id="claimPvInput" required placeholder="如: PV2026-09-001" class="w-full px-3 py-2 border rounded-xl text-sm font-mono font-bold">
         </div>
         <div class="flex justify-end gap-2 pt-2 border-t">
-            <button type="button" onclick="closeClaimPvModal()" class="px-3 py-1.5 bg-slate-100 rounded-lg text-xs font-semibold">取消</button>
-            <button type="button" onclick="submitClaimPv()" class="px-3.5 py-1.5 bg-emerald-600 text-white rounded-lg text-xs font-bold">确认报销</button>
+            <button type="button" onclick="closeClaimPvModal()" class="px-3 py-1.5 bg-slate-100 rounded-lg text-xs font-semibold cursor-pointer">取消</button>
+            <button type="button" onclick="submitClaimPv()" class="px-3.5 py-1.5 bg-emerald-600 text-white rounded-lg text-xs font-bold cursor-pointer">确认报销</button>
         </div>
     </div>
 </div>
@@ -617,7 +615,7 @@
         <input type="hidden" id="voContractId">
         <div>
             <label class="block text-xs font-semibold text-slate-600 mb-1">追加日期</label>
-            <input type="date" id="voDate" class="w-full px-3 py-2 border rounded-xl text-sm">
+            <input type="date" id="voDate" class="w-full px-3 py-2 border rounded-xl text-sm cursor-pointer">
         </div>
         <div>
             <label class="block text-xs font-semibold text-slate-600 mb-1">VO 项目内容描述</label>
@@ -628,8 +626,8 @@
             <input type="number" step="0.01" id="voAmt" placeholder="0.00" class="w-full px-3 py-2 border rounded-xl text-sm font-bold text-indigo-700">
         </div>
         <div class="flex justify-end gap-2 pt-2 border-t">
-            <button type="button" onclick="closeVoModal()" class="px-3 py-1.5 bg-slate-100 rounded-lg text-xs font-semibold">取消</button>
-            <button type="button" onclick="submitVoRecord()" class="px-3.5 py-1.5 bg-indigo-600 text-white rounded-lg text-xs font-bold">确认追加</button>
+            <button type="button" onclick="closeVoModal()" class="px-3 py-1.5 bg-slate-100 rounded-lg text-xs font-semibold cursor-pointer">取消</button>
+            <button type="button" onclick="submitVoRecord()" class="px-3.5 py-1.5 bg-indigo-600 text-white rounded-lg text-xs font-bold cursor-pointer">确认追加</button>
         </div>
     </div>
 </div>
@@ -656,6 +654,18 @@
 
     let isAdminUnlocked = localStorage.getItem('limsheng_admin_unlocked') === 'true';
 
+    // 核心容错包装器：哪怕单独某个表未建好，也不阻止其他脚本运行
+    async function safeFetch(url) {
+        try {
+            const res = await fetch(url, { headers: reqHeaders });
+            if (!res.ok) return [];
+            return await res.json();
+        } catch (e) {
+            console.warn("safeFetch error:", url, e);
+            return [];
+        }
+    }
+
     function initSystemDates() {
         const now = new Date();
         const y = now.getFullYear();
@@ -663,28 +673,35 @@
         const d = String(now.getDate()).padStart(2, '0');
         const todayStr = `${y}-${m}-${d}`;
 
-        document.getElementById('attWorkDate').value = todayStr;[cite: 1]
-        document.getElementById('advDate').value = todayStr;[cite: 1]
-        document.getElementById('subContractDate').value = todayStr;
-        document.getElementById('pettyDate').value = todayStr;
+        const setVal = (id, val) => {
+            const el = document.getElementById(id);
+            if (el) el.value = val;
+        };
 
-        document.getElementById('filterYearSelect').value = String(y);
-        document.getElementById('filterMonthSelect').value = m;
+        setVal('attWorkDate', todayStr);
+        setVal('advDate', todayStr);
+        setVal('subContractDate', todayStr);
+        setVal('pettyDate', todayStr);
+
+        setVal('filterYearSelect', String(y));
+        setVal('filterMonthSelect', m);
 
         const h = String(now.getHours()).padStart(2, '0');
         const min = String(now.getMinutes()).padStart(2, '0');
-        document.getElementById('payDateTime').value = `${todayStr}T${h}:${min}`;[cite: 1]
-        document.getElementById('pettyTime').value = `${h}:${min}`;
+        setVal('payDateTime', `${todayStr}T${h}:${min}`);
+        setVal('pettyTime', `${h}:${min}`);
     }
 
-    window.addEventListener('load', () => {
+    // 页面主入口：先填充默认日期与状态，绝不卡住
+    window.addEventListener('DOMContentLoaded', () => {
         initSystemDates();
         applyAdminState();
         refreshAll();
     });
 
     async function refreshAll() {
-        await Promise.all([
+        // 分离独立执行，防止因某个表报错引起全面挂死
+        await Promise.allSettled([
             fetchWorkers(),
             fetchSites(),
             fetchAttendance(),
@@ -724,15 +741,19 @@
         const btn = document.getElementById('adminToggleBtn');
 
         if (isAdminUnlocked) {
-            subconNav.classList.remove('hidden');
-            pettyNav.classList.remove('hidden');
-            btn.innerText = "🔒 退出管理";
-            btn.className = "px-2.5 sm:px-3.5 py-1.5 bg-slate-800 text-white text-xs font-bold rounded-xl transition cursor-pointer";
+            if (subconNav) subconNav.classList.remove('hidden');
+            if (pettyNav) pettyNav.classList.remove('hidden');
+            if (btn) {
+                btn.innerText = "🔒 退出管理";
+                btn.className = "px-2.5 sm:px-3.5 py-1.5 bg-slate-800 text-white text-xs font-bold rounded-xl transition cursor-pointer";
+            }
         } else {
-            subconNav.classList.add('hidden');
-            pettyNav.classList.add('hidden');
-            btn.innerText = "⚙️ 管理模式";
-            btn.className = "px-2.5 sm:px-3.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 text-xs font-bold rounded-xl transition cursor-pointer";
+            if (subconNav) subconNav.classList.add('hidden');
+            if (pettyNav) pettyNav.classList.add('hidden');
+            if (btn) {
+                btn.innerText = "⚙️ 管理模式";
+                btn.className = "px-2.5 sm:px-3.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 text-xs font-bold rounded-xl transition cursor-pointer";
+            }
             const curActive = document.querySelector('.border-indigo-600');
             if (curActive && (curActive.id === 'navSubconBtn' || curActive.id === 'navPettyCashBtn')) {
                 switchMainTab('workers');
@@ -745,29 +766,32 @@
             const btn = document.getElementById(`nav${t}Btn`);
             const panel = document.getElementById(`tab${t}`);
             if (t.toLowerCase() === tab.toLowerCase()) {
-                panel.classList.remove('hidden');
-                btn.className = "px-3 py-2 border-b-2 border-indigo-600 text-indigo-600 transition whitespace-nowrap cursor-pointer";
+                if (panel) panel.classList.remove('hidden');
+                if (btn) btn.className = "px-3 py-2 border-b-2 border-indigo-600 text-indigo-600 transition whitespace-nowrap cursor-pointer";
             } else {
-                panel.classList.add('hidden');
-                btn.className = "px-3 py-2 border-b-2 border-transparent text-slate-500 hover:text-indigo-600 transition whitespace-nowrap cursor-pointer";
+                if (panel) panel.classList.add('hidden');
+                if (btn) btn.className = "px-3 py-2 border-b-2 border-transparent text-slate-500 hover:text-indigo-600 transition whitespace-nowrap cursor-pointer";
             }
         });
     }
 
     function toggleTimeMode() {
         const mode = document.getElementById('attRecordMode').value;[cite: 1]
+        const modeTime = document.getElementById('modeTimeArea');
+        const modeHours = document.getElementById('modeHoursArea');
         if (mode === 'time') {[cite: 1]
-            document.getElementById('modeTimeArea').classList.remove('hidden');[cite: 1]
-            document.getElementById('modeHoursArea').classList.add('hidden');[cite: 1]
+            if (modeTime) modeTime.classList.remove('hidden');
+            if (modeHours) modeHours.classList.add('hidden');
         } else {
-            document.getElementById('modeTimeArea').classList.add('hidden');[cite: 1]
-            document.getElementById('modeHoursArea').classList.remove('hidden');[cite: 1]
+            if (modeTime) modeTime.classList.add('hidden');
+            if (modeHours) modeHours.classList.remove('hidden');
         }
     }
 
     function togglePaymentSource() {
         const paidBy = document.getElementById('payPaidBy').value;[cite: 1]
         const methodSelect = document.getElementById('payMethod');[cite: 1]
+        if (!methodSelect) return;
         if (paidBy === '公司转账') {[cite: 1]
             methodSelect.innerHTML = `<option value="公司银行户口">🏢 公司主银行户口直接转账</option>`;[cite: 1]
         } else {
@@ -781,31 +805,27 @@
     }
 
     function setSubconNoteAdvance() {
-        document.getElementById('payNote').value = "Advance";
+        const el = document.getElementById('payNote');
+        if (el) el.value = "Advance";
     }
 
     // ==============================================================
     // 1. 工人与工地
     // ==============================================================
     async function fetchWorkers() {
-        try {
-            const res = await fetch(`${SUPABASE_URL}/workers?status=eq.active&order=name.asc`, { headers: reqHeaders });[cite: 1]
-            workersList = await res.json();[cite: 1]
-            renderWorkerSelectors();
-            renderWorkerAdminList();
-        } catch (e) { console.error(e); }[cite: 1]
+        workersList = await safeFetch(`${SUPABASE_URL}/workers?status=eq.active&order=name.asc`);
+        renderWorkerSelectors();
+        renderWorkerAdminList();
     }
 
     async function fetchSites() {
-        try {
-            const res = await fetch(`${SUPABASE_URL}/job_sites?order=id.asc`, { headers: reqHeaders });
-            sitesList = await res.json();[cite: 1]
-            renderSiteSelectors();
-        } catch (e) { console.error(e); }[cite: 1]
+        sitesList = await safeFetch(`${SUPABASE_URL}/job_sites?order=id.asc`);
+        renderSiteSelectors();
     }
 
     function renderWorkerSelectors() {
         const checkList = document.getElementById('workerCheckboxList');
+        if (!checkList) return;
         checkList.innerHTML = '';
         if (workersList.length === 0) {
             checkList.innerHTML = '<div class="text-xs text-slate-400 col-span-full py-3 text-center">暂无工人，请先在名录录入</div>';
@@ -825,10 +845,12 @@
         }
 
         const advSelect = document.getElementById('advWorkerSelect');
-        advSelect.innerHTML = '<option value="">-- 请选择借款工人 --</option>';
-        workersList.forEach(w => {
-            advSelect.innerHTML += `<option value="${w.id}">${escapeHtml(w.name)} (${escapeHtml(w.worker_type || '中工')})</option>`;
-        });
+        if (advSelect) {
+            advSelect.innerHTML = '<option value="">-- 请选择借款工人 --</option>';
+            workersList.forEach(w => {
+                advSelect.innerHTML += `<option value="${w.id}">${escapeHtml(w.name)} (${escapeHtml(w.worker_type || '中工')})</option>`;
+            });
+        }
     }
 
     function selectAllWorkers(state) {
@@ -840,49 +862,56 @@
         const detailSiteFilter = document.getElementById('detailSiteFilter');
         const tagsArea = document.getElementById('siteTagsArea');
         const archivedArea = document.getElementById('archivedSitesContainer');
+        if (!siteSelect) return;
+
         siteSelect.innerHTML = '';
-        detailSiteFilter.innerHTML = '<option value="">全部工地 (不限)</option>';
-        tagsArea.innerHTML = '';
-        archivedArea.innerHTML = '';
+        if (detailSiteFilter) detailSiteFilter.innerHTML = '<option value="">全部工地 (不限)</option>';
+        if (tagsArea) tagsArea.innerHTML = '';
+        if (archivedArea) archivedArea.innerHTML = '';
 
         const activeSites = sitesList.filter(s => s.status === 'active' || !s.status);
         const archivedSites = sitesList.filter(s => s.status === 'archived');
 
         activeSites.forEach(s => {
             siteSelect.innerHTML += `<option value="${escapeHtml(s.site_name)}">${escapeHtml(s.site_name)}</option>`;[cite: 1]
-            detailSiteFilter.innerHTML += `<option value="${escapeHtml(s.site_name)}">${escapeHtml(s.site_name)}</option>`;
+            if (detailSiteFilter) detailSiteFilter.innerHTML += `<option value="${escapeHtml(s.site_name)}">${escapeHtml(s.site_name)}</option>`;
             
-            const div = document.createElement('div');
-            div.className = "flex items-center justify-between p-2 bg-slate-50 border border-slate-200 rounded-xl text-xs";
-            div.innerHTML = `
-                <span class="font-bold text-slate-800">📍 ${escapeHtml(s.site_name)}</span>
-                <div class="space-x-2">
-                    <button type="button" onclick="editSiteName(${s.id}, '${escapeHtml(s.site_name)}')" class="text-indigo-600 font-semibold hover:underline">改名</button>
-                    <button type="button" onclick="setSiteStatus(${s.id}, 'archived')" class="text-rose-500 font-semibold hover:underline">隐藏</button>
-                </div>
-            `;
-            tagsArea.appendChild(div);
+            if (tagsArea) {
+                const div = document.createElement('div');
+                div.className = "flex items-center justify-between p-2 bg-slate-50 border border-slate-200 rounded-xl text-xs";
+                div.innerHTML = `
+                    <span class="font-bold text-slate-800">📍 ${escapeHtml(s.site_name)}</span>
+                    <div class="space-x-2">
+                        <button type="button" onclick="editSiteName(${s.id}, '${escapeHtml(s.site_name)}')" class="text-indigo-600 font-semibold hover:underline cursor-pointer">改名</button>
+                        <button type="button" onclick="setSiteStatus(${s.id}, 'archived')" class="text-rose-500 font-semibold hover:underline cursor-pointer">隐藏</button>
+                    </div>
+                `;
+                tagsArea.appendChild(div);
+            }
         });
 
-        if (archivedSites.length === 0) {
-            archivedArea.innerHTML = '<div class="text-[11px] text-slate-400 py-1">暂无隐藏工地</div>';
-        } else {
-            archivedSites.forEach(s => {
-                const div = document.createElement('div');
-                div.className = "flex items-center justify-between p-2 bg-slate-100 border border-dashed border-slate-300 rounded-xl text-xs text-slate-500";
-                div.innerHTML = `
-                    <span>🔒 ${escapeHtml(s.site_name)} (已隐藏)</span>
-                    <button type="button" onclick="setSiteStatus(${s.id}, 'active')" class="text-emerald-700 font-bold hover:underline">
-                        🔄 解除隐藏并恢复
-                    </button>
-                `;
-                archivedArea.appendChild(div);
-            });
+        if (archivedArea) {
+            if (archivedSites.length === 0) {
+                archivedArea.innerHTML = '<div class="text-[11px] text-slate-400 py-1">暂无隐藏工地</div>';
+            } else {
+                archivedSites.forEach(s => {
+                    const div = document.createElement('div');
+                    div.className = "flex items-center justify-between p-2 bg-slate-100 border border-dashed border-slate-300 rounded-xl text-xs text-slate-500";
+                    div.innerHTML = `
+                        <span>🔒 ${escapeHtml(s.site_name)} (已隐藏)</span>
+                        <button type="button" onclick="setSiteStatus(${s.id}, 'active')" class="text-emerald-700 font-bold hover:underline cursor-pointer">
+                            🔄 解除隐藏并恢复
+                        </button>
+                    `;
+                    archivedArea.appendChild(div);
+                });
+            }
         }
     }
 
     function toggleArchivedSitesList() {
-        document.getElementById('archivedSitesContainer').classList.toggle('hidden');
+        const el = document.getElementById('archivedSitesContainer');
+        if (el) el.classList.toggle('hidden');
     }
 
     async function setSiteStatus(id, status) {
@@ -941,6 +970,7 @@
 
     function renderWorkerAdminList() {
         const container = document.getElementById('registeredWorkersContainer');
+        if (!container) return;
         container.innerHTML = '';
         workersList.forEach(w => {
             const card = document.createElement('div');
@@ -952,8 +982,8 @@
                     <div class="text-[11px] text-slate-400 font-mono mt-0.5">日薪: RM ${Number(w.daily_rate).toFixed(0)} (RM ${Number(w.hourly_rate).toFixed(2)}/h) ｜ IC: ${escapeHtml(w.ic_passport)}</div>
                 </div>
                 <div class="flex items-center gap-1.5 shrink-0">
-                    <button onclick="requestSecureAction('edit', ${w.id})" class="px-2 py-1 bg-white border border-slate-200 rounded-lg text-indigo-600 font-semibold hover:bg-indigo-50">编辑</button>
-                    <button onclick="requestSecureAction('archive', ${w.id})" class="px-2 py-1 bg-white border border-slate-200 rounded-lg text-rose-500 font-semibold hover:bg-rose-50">注销</button>
+                    <button onclick="requestSecureAction('edit', ${w.id})" class="px-2 py-1 bg-white border border-slate-200 rounded-lg text-indigo-600 font-semibold hover:bg-indigo-50 cursor-pointer">编辑</button>
+                    <button onclick="requestSecureAction('archive', ${w.id})" class="px-2 py-1 bg-white border border-slate-200 rounded-lg text-rose-500 font-semibold hover:bg-rose-50 cursor-pointer">注销</button>
                 </div>
             `;
             container.appendChild(card);
@@ -1011,10 +1041,7 @@
     // 2. 打卡出勤与借支
     // ==============================================================
     async function fetchAttendance() {
-        try {
-            const res = await fetch(`${SUPABASE_URL}/attendance_records?order=work_date.desc,id.desc`, { headers: reqHeaders });[cite: 1]
-            attendanceList = await res.json();[cite: 1]
-        } catch (e) { console.error(e); }[cite: 1]
+        attendanceList = await safeFetch(`${SUPABASE_URL}/attendance_records?order=work_date.desc,id.desc`);
     }
 
     async function handleAttendanceSubmit(e) {
@@ -1076,14 +1103,12 @@
     }
 
     async function fetchAdvances() {
-        try {
-            const res = await fetch(`${SUPABASE_URL}/worker_advances?order=advance_date.desc,id.desc`, { headers: reqHeaders });[cite: 1]
-            advancesList = await res.json();[cite: 1]
-        } catch (e) { console.error(e); }[cite: 1]
+        advancesList = await safeFetch(`${SUPABASE_URL}/worker_advances?order=advance_date.desc,id.desc`);
     }
 
     function setAdvAmount(val) {
-        document.getElementById('advAmount').value = val;[cite: 1]
+        const el = document.getElementById('advAmount');
+        if (el) el.value = val;
     }
 
     async function handleAdvanceSubmit(e) {
@@ -1110,11 +1135,13 @@
     }
 
     function renderWorkerMonthlySummary() {
-        const year = document.getElementById('filterYearSelect').value;
-        const month = document.getElementById('filterMonthSelect').value;
-        const targetYearMonth = `${year}-${month}`;
+        const yearEl = document.getElementById('filterYearSelect');
+        const monthEl = document.getElementById('filterMonthSelect');
+        if (!yearEl || !monthEl) return;
 
+        const targetYearMonth = `${yearEl.value}-${monthEl.value}`;
         const container = document.getElementById('workerMonthlyContainer');
+        if (!container) return;
         container.innerHTML = '';
 
         let activeCount = 0;
@@ -1174,17 +1201,20 @@
     // 3. 工人打卡明细 (带工地搜索、工钱统计与按月折叠)
     // ==============================================================
     function renderDailyDetailGroups() {
-        const searchDate = document.getElementById('detailDateSearch').value;
-        const selectedSite = document.getElementById('detailSiteFilter').value;
-
+        const searchDateEl = document.getElementById('detailDateSearch');
+        const selectedSiteEl = document.getElementById('detailSiteFilter');
         const attContainer = document.getElementById('attGroupedContainer');
         const advContainer = document.getElementById('advGroupedContainer');
         const summaryBox = document.getElementById('siteCostSummaryBox');
 
+        if (!attContainer || !advContainer) return;
+
+        const searchDate = searchDateEl ? searchDateEl.value : '';
+        const selectedSite = selectedSiteEl ? selectedSiteEl.value : '';
+
         attContainer.innerHTML = '';
         advContainer.innerHTML = '';
 
-        // 1. 出勤数据过滤与工地工钱核算
         let siteTotalHours = 0;
         let siteTotalWage = 0;
 
@@ -1193,23 +1223,23 @@
             if (searchDate && item.work_date !== searchDate) return;
             if (selectedSite && item.site_name !== selectedSite) return;
 
-            // 累计该筛选范围下的工时与工钱
             siteTotalHours += Number(item.total_hours || 0);
             siteTotalWage += Number(item.daily_wage || 0);
 
-            const monthKey = item.work_date.slice(0, 7);
+            const monthKey = (item.work_date || '').slice(0, 7) || '其它';
             if (!attGroups[monthKey]) attGroups[monthKey] = [];
             attGroups[monthKey].push(item);
         });
 
-        // 渲染选定工地的成本看板
-        if (selectedSite) {
-            summaryBox.classList.remove('hidden');
-            document.getElementById('summarySiteNameLabel').innerText = `📍 ${selectedSite}`;
-            document.getElementById('summarySiteHours').innerText = siteTotalHours.toFixed(1);
-            document.getElementById('summarySiteWage').innerText = `RM ${siteTotalWage.toFixed(2)}`;
-        } else {
-            summaryBox.classList.add('hidden');
+        if (summaryBox) {
+            if (selectedSite) {
+                summaryBox.classList.remove('hidden');
+                document.getElementById('summarySiteNameLabel').innerText = `📍 ${selectedSite}`;
+                document.getElementById('summarySiteHours').innerText = siteTotalHours.toFixed(1);
+                document.getElementById('summarySiteWage').innerText = `RM ${siteTotalWage.toFixed(2)}`;
+            } else {
+                summaryBox.classList.add('hidden');
+            }
         }
 
         const attMonths = Object.keys(attGroups).sort().reverse();
@@ -1221,15 +1251,10 @@
                 const groupDiv = document.createElement('div');
                 groupDiv.className = "border border-slate-200 rounded-xl overflow-hidden bg-white";
 
-                // 筛选了工地或日期则自动展开，否则只展开最近的一个月
                 const isExpanded = !!(selectedSite || searchDate || idx === 0);
 
-                let monthHours = 0;
                 let monthWage = 0;
-                list.forEach(r => {
-                    monthHours += Number(r.total_hours || 0);
-                    monthWage += Number(r.daily_wage || 0);
-                });
+                list.forEach(r => { monthWage += Number(r.daily_wage || 0); });
 
                 groupDiv.innerHTML = `
                     <button type="button" onclick="toggleGroupBody('att-group-${mKey}')" class="w-full px-3 py-2 bg-slate-50 hover:bg-slate-100 flex items-center justify-between text-xs font-bold text-slate-800 cursor-pointer">
@@ -1271,11 +1296,10 @@
             });
         }
 
-        // 2. 借款按月分组 (如果选定了工地，借款通常不属于特定工地，因此展示全部借款或按日期)
         const advGroups = {};
         advancesList.forEach(item => {
             if (searchDate && item.advance_date !== searchDate) return;
-            const monthKey = item.advance_date.slice(0, 7);
+            const monthKey = (item.advance_date || '').slice(0, 7) || '其它';
             if (!advGroups[monthKey]) advGroups[monthKey] = [];
             advGroups[monthKey].push(item);
         });
@@ -1325,13 +1349,16 @@
     }
 
     function clearDetailFilters() {
-        document.getElementById('detailDateSearch').value = '';
-        document.getElementById('detailSiteFilter').value = '';
+        const d = document.getElementById('detailDateSearch');
+        const s = document.getElementById('detailSiteFilter');
+        if (d) d.value = '';
+        if (s) s.value = '';
         renderDailyDetailGroups();
     }
 
     function toggleGroupBody(id) {
-        document.getElementById(id).classList.toggle('hidden');
+        const el = document.getElementById(id);
+        if (el) el.classList.toggle('hidden');
     }
 
     function openEditAttModal(id, currentHours, currentNote) {
@@ -1353,7 +1380,7 @@
         if (isNaN(total_hours) || total_hours <= 0) return alert("工时无效！");
 
         const target = attendanceList.find(a => a.id === parseInt(id));
-        const worker = workersList.find(w => w.id === target.worker_id);
+        const worker = workersList.find(w => w.id === (target ? target.worker_id : null));
         const hourlyRate = worker ? Number(worker.hourly_rate) : 12.5;
         const daily_wage = +(total_hours * hourlyRate).toFixed(2);
 
@@ -1390,21 +1417,20 @@
     // 4. Subcon 分包
     // ==============================================================
     async function fetchSubconData() {
-        try {
-            const [cRes, pRes, vRes] = await Promise.all([
-                fetch(`${SUPABASE_URL}/subcon_contracts?order=id.desc`, { headers: reqHeaders }),[cite: 1]
-                fetch(`${SUPABASE_URL}/subcon_payments?order=payment_time.desc`, { headers: reqHeaders }),[cite: 1]
-                fetch(`${SUPABASE_URL}/subcon_vo_records?order=vo_date.desc`, { headers: reqHeaders })[cite: 1]
-            ]);
-            subconContracts = await cRes.json();[cite: 1]
-            subconPayments = await pRes.json();[cite: 1]
-            subconVos = await vRes.json();[cite: 1]
-            renderSubconSelectors();
-        } catch (e) { console.error(e); }[cite: 1]
+        const [cData, pData, vData] = await Promise.all([
+            safeFetch(`${SUPABASE_URL}/subcon_contracts?order=id.desc`),
+            safeFetch(`${SUPABASE_URL}/subcon_payments?order=payment_time.desc`),
+            safeFetch(`${SUPABASE_URL}/subcon_vo_records?order=vo_date.desc`)
+        ]);
+        subconContracts = cData;
+        subconPayments = pData;
+        subconVos = vData;
+        renderSubconSelectors();
     }
 
     function renderSubconSelectors() {
         const select = document.getElementById('payContractSelect');[cite: 1]
+        if (!select) return;
         select.innerHTML = '<option value="">-- 请选择分包工程 --</option>';[cite: 1]
         subconContracts.forEach(c => {[cite: 1]
             select.innerHTML += `<option value="${c.id}">${escapeHtml(c.project_name)} (${escapeHtml(c.subcon_name)})</option>`;[cite: 1]
@@ -1426,7 +1452,7 @@
         document.getElementById('subProjectName').value = '';[cite: 1]
         document.getElementById('subSubconName').value = '';[cite: 1]
         document.getElementById('subBaseAmount').value = '';[cite: 1]
-        await fetchSubconData();[cite: 1]
+        await fetchSubconData();
         renderSubconDashboard();[cite: 1]
         alert(`分包工程 [${project_name}] 合同建立成功！`);
     }
@@ -1450,13 +1476,14 @@
         });
         document.getElementById('payAmount').value = '';[cite: 1]
         document.getElementById('payNote').value = '';[cite: 1]
-        await fetchSubconData();[cite: 1]
+        await fetchSubconData();
         renderSubconDashboard();[cite: 1]
         alert('Subcon 领款记录已入账！');
     }
 
     function renderSubconDashboard() {
         const container = document.getElementById('subconCardsContainer');[cite: 1]
+        if (!container) return;
         container.innerHTML = '';[cite: 1]
 
         let privateSum = 0;
@@ -1474,9 +1501,12 @@
             }
         });
 
-        document.getElementById('subconPrivateTotal').innerText = privateSum.toFixed(2);
-        document.getElementById('subconUnclaimedTotal').innerText = `待Claim: RM ${unclaimedSum.toFixed(2)}`;
-        document.getElementById('subconCompanyTotal').innerText = companySum.toFixed(2);
+        const pTot = document.getElementById('subconPrivateTotal');
+        const uTot = document.getElementById('subconUnclaimedTotal');
+        const cTot = document.getElementById('subconCompanyTotal');
+        if (pTot) pTot.innerText = privateSum.toFixed(2);
+        if (uTot) uTot.innerText = `待Claim: RM ${unclaimedSum.toFixed(2)}`;
+        if (cTot) cTot.innerText = companySum.toFixed(2);
 
         subconContracts.forEach(c => {[cite: 1]
             let totalVO = 0;[cite: 1]
@@ -1498,7 +1528,7 @@
             } else {
                 currentPayments.forEach(p => {[cite: 1]
                     const isPrivate = p.paid_by === '私人先给';[cite: 1]
-                    const timeFormatted = p.payment_time.replace('T', ' ').slice(0, 16);[cite: 1]
+                    const timeFormatted = (p.payment_time || '').replace('T', ' ').slice(0, 16);
 
                     let claimHtml = '';
                     if (isPrivate) {
@@ -1562,7 +1592,8 @@
             container.appendChild(card);[cite: 1]
         });
 
-        document.getElementById('subconAllContractsTotal').innerText = contractAllSum.toFixed(2);
+        const allCont = document.getElementById('subconAllContractsTotal');
+        if (allCont) allCont.innerText = contractAllSum.toFixed(2);
     }
 
     async function deleteSubconPayment(id) {
@@ -1596,7 +1627,7 @@
             body: JSON.stringify([{ contract_id, vo_date, vo_description, vo_amount }])[cite: 1]
         });
         closeVoModal();[cite: 1]
-        await fetchSubconData();[cite: 1]
+        await fetchSubconData();
         renderSubconDashboard();[cite: 1]
     }
 
@@ -1604,15 +1635,13 @@
     // 5. Marco 现金
     // ==============================================================
     async function fetchPettyCash() {
-        try {
-            const res = await fetch(`${SUPABASE_URL}/marco_petty_cash?order=record_date.desc,record_time.desc`, { headers: reqHeaders });
-            pettyCashList = await res.json();
-        } catch (e) { console.error(e); }
+        pettyCashList = await safeFetch(`${SUPABASE_URL}/marco_petty_cash?order=record_date.desc,record_time.desc`);
     }
 
     function togglePettyCategory() {
         const type = document.getElementById('pettyTransType').value;
         const cat = document.getElementById('pettyCategory');
+        if (!cat) return;
         if (type === 'IN') {
             cat.innerHTML = `
                 <option value="卖废铁现金">卖工地废铁/旧料</option>
@@ -1661,6 +1690,7 @@
 
     function renderPettyCashGroups() {
         const container = document.getElementById('pettyGroupedContainer');
+        if (!container) return;
         container.innerHTML = '';
 
         let outTotal = 0;
@@ -1680,15 +1710,17 @@
                 if (!item.is_claimed) unclaimedIn += amt;
             }
 
-            const monthKey = item.record_date.slice(0, 7);
+            const monthKey = (item.record_date || '').slice(0, 7) || '其它';
             if (!pettyGroups[monthKey]) pettyGroups[monthKey] = [];
             pettyGroups[monthKey].push(item);
         });
 
-        document.getElementById('pettyOutTotal').innerText = outTotal.toFixed(2);
-        document.getElementById('pettyInTotal').innerText = inTotal.toFixed(2);
-        const netClaim = unclaimedOut - unclaimedIn;
-        document.getElementById('pettyNetClaim').innerText = netClaim.toFixed(2);
+        const oEl = document.getElementById('pettyOutTotal');
+        const iEl = document.getElementById('pettyInTotal');
+        const nEl = document.getElementById('pettyNetClaim');
+        if (oEl) oEl.innerText = outTotal.toFixed(2);
+        if (iEl) iEl.innerText = inTotal.toFixed(2);
+        if (nEl) nEl.innerText = (unclaimedOut - unclaimedIn).toFixed(2);
 
         const months = Object.keys(pettyGroups).sort().reverse();
         if (months.length === 0) {
