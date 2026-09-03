@@ -19,7 +19,7 @@
             <div>
                 <h1 class="text-lg sm:text-2xl font-black tracking-tight text-slate-900 flex items-center gap-2">
                     🏗️ LIM SHENG CONSTRUCTION
-                    <span id="connStatusBadge" class="text-xs px-2 py-0.5 rounded-full font-bold bg-amber-100 text-amber-700">正在连接...</span>
+                    <span id="connStatusBadge" class="text-xs px-2 py-0.5 rounded-full font-bold bg-amber-100 text-amber-700">准备就绪</span>
                 </h1>
                 <p class="text-[11px] sm:text-xs text-slate-500 mt-0.5">现场劳务核算 · 工人出勤流水 · 现金与分包管理</p>
             </div>
@@ -27,8 +27,8 @@
                 <button type="button" id="adminToggleBtn" onclick="toggleAdminLock()" class="px-2.5 sm:px-3.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 text-xs font-bold rounded-xl transition cursor-pointer">
                     ⚙️ 管理模式
                 </button>
-                <button type="button" onclick="refreshAll()" class="px-2.5 sm:px-3.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-xl transition cursor-pointer">
-                    🔄 刷新
+                <button type="button" onclick="refreshAll()" class="px-2.5 sm:px-3.5 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-xl transition cursor-pointer shadow-sm">
+                    🔄 刷新同步
                 </button>
             </div>
         </div>
@@ -656,18 +656,31 @@
 
     let isAdminUnlocked = localStorage.getItem('limsheng_admin_unlocked') === 'true';
 
-    // 严谨请求函数：捕获错误并在界面展示具体原因
+    // 强隔离网络请求：带 6 秒超时中断，绝不无限挂死页面
     async function safeFetch(path) {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 6000);
+
         try {
-            const res = await fetch(`${SUPABASE_URL}/${path}`, { headers: reqHeaders });
+            const res = await fetch(`${SUPABASE_URL}/${path}`, {
+                headers: reqHeaders,
+                signal: controller.signal
+            });
+            clearTimeout(timeoutId);
+
             if (!res.ok) {
                 const text = await res.text();
-                showGlobalError(`[接口错误 ${res.status}] ${path} - ${text}`);
+                showGlobalError(`[数据库反馈异常 ${res.status}] 请检查 ${path}: ${text}`);
                 return [];
             }
             return await res.json();
         } catch (e) {
-            showGlobalError(`网络异常无法连接数据库: ${e.message}`);
+            clearTimeout(timeoutId);
+            if (e.name === 'AbortError') {
+                showGlobalError(`连接超时：网络较慢，正在使用离线模式`);
+            } else {
+                showGlobalError(`无法连接数据库：${e.message}`);
+            }
             return [];
         }
     }
@@ -707,7 +720,7 @@
         setVal('pettyTime', `${h}:${min}`);
     }
 
-    // 统一在 DOM 就绪后按顺序执行，避免在元素尚未生成前触发空对象崩溃
+    // 保证在 DOM 构建完毕的第一时间全部解锁
     document.addEventListener('DOMContentLoaded', () => {
         initSystemDates();
         applyAdminState();
