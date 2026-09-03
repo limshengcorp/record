@@ -17,8 +17,9 @@
     <div class="bg-white p-3.5 sm:p-5 rounded-2xl shadow-sm space-y-3">
         <div class="flex items-center justify-between gap-2">
             <div>
-                <h1 class="text-lg sm:text-2xl font-black tracking-tight text-slate-900">
+                <h1 class="text-lg sm:text-2xl font-black tracking-tight text-slate-900 flex items-center gap-2">
                     🏗️ LIM SHENG CONSTRUCTION
+                    <span id="connStatusBadge" class="text-xs px-2 py-0.5 rounded-full font-bold bg-amber-100 text-amber-700">连接中...</span>
                 </h1>
                 <p class="text-[11px] sm:text-xs text-slate-500 mt-0.5">现场劳务核算 · 工人出勤流水 · 现金与分包管理</p>
             </div>
@@ -71,7 +72,7 @@
 
             <form onsubmit="handleAttendanceSubmit(event)" class="space-y-3.5">
                 
-                <!-- 勾选出勤工人 (置顶第一行) -->
+                <!-- 勾选出勤工人 (第一行) -->
                 <div class="bg-slate-50 p-2.5 sm:p-3 rounded-xl border border-slate-200 space-y-2">
                     <div class="flex items-center justify-between">
                         <label class="text-xs font-bold text-slate-800">1. 勾选今天出勤的工人 (多选)：</label>
@@ -82,7 +83,7 @@
                         </div>
                     </div>
                     <div id="workerCheckboxList" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-1.5 max-h-48 overflow-y-auto p-1 bg-white rounded-lg border border-slate-200">
-                        <div class="text-xs text-slate-400 col-span-full py-3 text-center">读取中...</div>
+                        <div class="text-xs text-slate-400 col-span-full py-3 text-center">暂无工人，请先在名录录入</div>
                     </div>
                 </div>
 
@@ -105,7 +106,7 @@
                     </div>
                 </div>
 
-                <!-- 直接工时模式 (默认展示) -->
+                <!-- 直接工时模式 (默认) -->
                 <div id="modeHoursArea" class="bg-indigo-50/50 p-2.5 sm:p-3 rounded-xl border border-indigo-100">
                     <label class="block text-xs font-bold text-indigo-900 mb-1">本次工作时长 (小时 / 填半天 4、整天 8、加班 9 等)：</label>
                     <input type="number" step="0.5" id="attDirectHours" value="8" placeholder="例如：8" class="w-full px-3 py-2 border border-indigo-300 rounded-xl text-sm bg-white font-bold text-indigo-700">
@@ -654,18 +655,22 @@
 
     let isAdminUnlocked = localStorage.getItem('limsheng_admin_unlocked') === 'true';
 
-    // 核心容错包装器：哪怕单独某个表未建好，也不阻止其他脚本运行
+    // 无论任何单项报错，不阻断页面主线程
     async function safeFetch(url) {
         try {
             const res = await fetch(url, { headers: reqHeaders });
-            if (!res.ok) return [];
+            if (!res.ok) {
+                console.warn(`[HTTP ${res.status}] 数据获取受阻:`, url);
+                return [];
+            }
             return await res.json();
         } catch (e) {
-            console.warn("safeFetch error:", url, e);
+            console.warn("网络异常:", url, e);
             return [];
         }
     }
 
+    // 优先执行：确保日期与时间填入
     function initSystemDates() {
         const now = new Date();
         const y = now.getFullYear();
@@ -673,26 +678,28 @@
         const d = String(now.getDate()).padStart(2, '0');
         const todayStr = `${y}-${m}-${d}`;
 
-        const setVal = (id, val) => {
+        const setSafeVal = (id, val) => {
             const el = document.getElementById(id);
             if (el) el.value = val;
         };
 
-        setVal('attWorkDate', todayStr);
-        setVal('advDate', todayStr);
-        setVal('subContractDate', todayStr);
-        setVal('pettyDate', todayStr);
+        setSafeVal('attWorkDate', todayStr);
+        setSafeVal('advDate', todayStr);
+        setSafeVal('subContractDate', todayStr);
+        setSafeVal('pettyDate', todayStr);
 
-        setVal('filterYearSelect', String(y));
-        setVal('filterMonthSelect', m);
+        setSafeVal('filterYearSelect', String(y));
+        setSafeVal('filterMonthSelect', m);
 
         const h = String(now.getHours()).padStart(2, '0');
         const min = String(now.getMinutes()).padStart(2, '0');
-        setVal('payDateTime', `${todayStr}T${h}:${min}`);
-        setVal('pettyTime', `${h}:${min}`);
+        setSafeVal('payDateTime', `${todayStr}T${h}:${min}`);
+        setSafeVal('pettyTime', `${h}:${min}`);
     }
 
-    // 页面主入口：先填充默认日期与状态，绝不卡住
+    // 立即执行初始化，绝不卡住
+    initSystemDates();
+
     window.addEventListener('DOMContentLoaded', () => {
         initSystemDates();
         applyAdminState();
@@ -700,19 +707,38 @@
     });
 
     async function refreshAll() {
-        // 分离独立执行，防止因某个表报错引起全面挂死
-        await Promise.allSettled([
-            fetchWorkers(),
-            fetchSites(),
-            fetchAttendance(),
-            fetchAdvances(),
-            fetchSubconData(),
-            fetchPettyCash()
-        ]);
-        renderWorkerMonthlySummary();
-        renderDailyDetailGroups();
-        renderSubconDashboard();
-        renderPettyCashGroups();
+        const badge = document.getElementById('connStatusBadge');
+        if (badge) {
+            badge.innerText = "同步中...";
+            badge.className = "text-xs px-2 py-0.5 rounded-full font-bold bg-amber-100 text-amber-700";
+        }
+
+        try {
+            await Promise.allSettled([
+                fetchWorkers(),
+                fetchSites(),
+                fetchAttendance(),
+                fetchAdvances(),
+                fetchSubconData(),
+                fetchPettyCash()
+            ]);
+
+            renderWorkerMonthlySummary();
+            renderDailyDetailGroups();
+            renderSubconDashboard();
+            renderPettyCashGroups();
+
+            if (badge) {
+                badge.innerText = "云端正常";
+                badge.className = "text-xs px-2 py-0.5 rounded-full font-bold bg-emerald-100 text-emerald-700";
+            }
+        } catch (err) {
+            console.error("刷新失败:", err);
+            if (badge) {
+                badge.innerText = "离线/异常";
+                badge.className = "text-xs px-2 py-0.5 rounded-full font-bold bg-rose-100 text-rose-700";
+            }
+        }
     }
 
     function toggleAdminLock() {
