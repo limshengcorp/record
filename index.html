@@ -26,10 +26,14 @@
                 <button type="button" onclick="refreshAll()" class="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs sm:text-sm font-semibold rounded-xl transition cursor-pointer">
                     🔄 刷新同步
                 </button>
+                <!-- 隐藏模块管理解锁入口 -->
+                <button type="button" onclick="toggleManagementMode()" id="mgmtUnlockBtn" class="px-3.5 py-2 bg-slate-900 hover:bg-black text-white text-xs sm:text-sm font-bold rounded-xl transition cursor-pointer">
+                    🔒 管理模式 (未解锁)
+                </button>
             </div>
         </div>
 
-        <!-- 四大导航标签页 -->
+        <!-- 导航标签页 -->
         <div class="flex border-b border-slate-200 gap-1 sm:gap-2 overflow-x-auto pb-1">
             <button id="navWorkersBtn" type="button" onclick="switchMainTab('workers')"
                 class="px-3 sm:px-4 py-2.5 text-xs sm:text-sm font-bold border-b-2 border-indigo-600 text-indigo-600 transition flex items-center gap-1.5 whitespace-nowrap cursor-pointer">
@@ -39,13 +43,18 @@
                 class="px-3 sm:px-4 py-2.5 text-xs sm:text-sm font-bold border-b-2 border-transparent text-slate-500 hover:text-indigo-600 transition flex items-center gap-1.5 whitespace-nowrap cursor-pointer">
                 📋 工人打卡/借款流水明细
             </button>
+            <!-- 默认隐藏的敏感模块 -->
             <button id="navSubconBtn" type="button" onclick="switchMainTab('subcon')"
-                class="px-3 sm:px-4 py-2.5 text-xs sm:text-sm font-bold border-b-2 border-transparent text-slate-500 hover:text-indigo-600 transition flex items-center gap-1.5 whitespace-nowrap cursor-pointer">
+                class="px-3 sm:px-4 py-2.5 text-xs sm:text-sm font-bold border-b-2 border-transparent text-slate-500 hover:text-indigo-600 transition items-center gap-1.5 whitespace-nowrap cursor-pointer hidden">
                 📑 Subcon 分包与垫付
             </button>
             <button id="navPettyCashBtn" type="button" onclick="switchMainTab('pettyCash')"
-                class="px-3 sm:px-4 py-2.5 text-xs sm:text-sm font-bold border-b-2 border-transparent text-slate-500 hover:text-indigo-600 transition flex items-center gap-1.5 whitespace-nowrap cursor-pointer">
+                class="px-3 sm:px-4 py-2.5 text-xs sm:text-sm font-bold border-b-2 border-transparent text-slate-500 hover:text-indigo-600 transition items-center gap-1.5 whitespace-nowrap cursor-pointer hidden">
                 💼 Marco 现金收支与Claim
+            </button>
+            <button id="navSiteSearchBtn" type="button" onclick="switchMainTab('siteSearch')"
+                class="px-3 sm:px-4 py-2.5 text-xs sm:text-sm font-bold border-b-2 border-transparent text-slate-500 hover:text-indigo-600 transition flex items-center gap-1.5 whitespace-nowrap cursor-pointer">
+                🔍 工地工钱总和搜索
             </button>
             <button id="navManageBtn" type="button" onclick="switchMainTab('manage')"
                 class="px-3 sm:px-4 py-2.5 text-xs sm:text-sm font-bold border-b-2 border-transparent text-slate-500 hover:text-indigo-600 transition flex items-center gap-1.5 whitespace-nowrap cursor-pointer">
@@ -59,7 +68,7 @@
     <!-- ============================================================== -->
     <div id="tabWorkers" class="space-y-4 sm:space-y-6">
         
-        <!-- 操作卡片 1: 批量打卡 -->
+        <!-- 批量打卡 (默认工时模式，勾选移到第一行) -->
         <div class="bg-white p-4 sm:p-5 rounded-2xl shadow-sm space-y-4">
             <div class="flex items-center justify-between border-b pb-3">
                 <h2 class="text-sm sm:text-base font-bold text-slate-800 flex items-center gap-1.5">
@@ -69,6 +78,22 @@
             </div>
 
             <form onsubmit="handleAttendanceSubmit(event)" class="space-y-4">
+                
+                <!-- 1. 勾选出勤工人移至第一行 -->
+                <div class="bg-slate-50 p-3 rounded-xl border border-slate-200">
+                    <div class="flex items-center justify-between mb-1.5">
+                        <label class="text-xs font-bold text-slate-700">📌 第一步：勾选出勤工人：</label>
+                        <div class="space-x-3 text-xs font-semibold">
+                            <button type="button" onclick="selectAllWorkers(true)" class="text-indigo-600 hover:underline cursor-pointer">全选</button>
+                            <span class="text-slate-300">|</span>
+                            <button type="button" onclick="selectAllWorkers(false)" class="text-rose-500 hover:underline cursor-pointer">取消全选</button>
+                        </div>
+                    </div>
+                    <div id="workerCheckboxList" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 max-h-56 overflow-y-auto p-2 bg-white border rounded-lg">
+                        <div class="text-xs text-slate-400 col-span-full py-4 text-center">正在读取工人名单...</div>
+                    </div>
+                </div>
+
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
                     <div>
                         <label class="block text-xs font-semibold text-slate-600 mb-1">工作日期</label>
@@ -80,14 +105,15 @@
                     </div>
                     <div>
                         <label class="block text-xs font-semibold text-slate-600 mb-1">工时记录模式</label>
+                        <!-- 默认选中直接填工时 -->
                         <select id="attRecordMode" onchange="toggleTimeMode()" class="w-full px-3 py-2 border rounded-xl text-sm bg-white">
+                            <option value="hours" selected>直接填工时 (如: 4 或 8.5 小时)</option>
                             <option value="time">精确打卡时间 (自动算小时)</option>
-                            <option value="hours">直接填工时 (如: 4 或 8.5 小时)</option>
                         </select>
                     </div>
                 </div>
 
-                <div id="modeTimeArea" class="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-slate-50 p-3 rounded-xl border border-slate-200">
+                <div id="modeTimeArea" class="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-slate-50 p-3 rounded-xl border border-slate-200 hidden">
                     <div>
                         <label class="block text-xs font-semibold text-slate-600 mb-1">开工时间 (Check-In)</label>
                         <input type="time" id="attCheckInTime" value="08:00" class="w-full px-3 py-2 border rounded-xl text-sm bg-white">
@@ -98,24 +124,9 @@
                     </div>
                 </div>
 
-                <div id="modeHoursArea" class="hidden bg-slate-50 p-3 rounded-xl border border-slate-200">
+                <div id="modeHoursArea" class="bg-slate-50 p-3 rounded-xl border border-slate-200">
                     <label class="block text-xs font-semibold text-slate-600 mb-1">在该工地工作时长 (小时)</label>
-                    <input type="number" step="0.5" id="attDirectHours" placeholder="例如：4（跑半天）或 9（含加班）" class="w-full px-3 py-2 border rounded-xl text-sm bg-white">
-                </div>
-
-                <!-- 多选工人列表 (带全选与取消全选) -->
-                <div>
-                    <div class="flex items-center justify-between mb-1.5">
-                        <label class="text-xs font-bold text-slate-700">勾选出勤工人：</label>
-                        <div class="space-x-3 text-xs font-semibold">
-                            <button type="button" onclick="selectAllWorkers(true)" class="text-indigo-600 hover:underline">全选</button>
-                            <span class="text-slate-300">|</span>
-                            <button type="button" onclick="selectAllWorkers(false)" class="text-rose-500 hover:underline">取消全选</button>
-                        </div>
-                    </div>
-                    <div id="workerCheckboxList" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 max-h-56 overflow-y-auto p-2.5 border rounded-xl bg-slate-50">
-                        <div class="text-xs text-slate-400 col-span-full py-4 text-center">正在读取工人名单...</div>
-                    </div>
+                    <input type="number" step="0.5" id="attDirectHours" value="8" placeholder="例如：4（跑半天）或 8（正常全天）" class="w-full px-3 py-2 border rounded-xl text-sm bg-white font-bold text-indigo-700">
                 </div>
 
                 <div>
@@ -123,13 +134,13 @@
                     <input type="text" id="attNote" placeholder="例如：上午绑铁、下午灌灰或修补" class="w-full px-3 py-2 border rounded-xl text-sm">
                 </div>
 
-                <button type="submit" id="attSubmitBtn" class="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-sm shadow transition">
+                <button type="submit" id="attSubmitBtn" class="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-sm shadow transition cursor-pointer">
                     📝 一键批量生成出勤记录
                 </button>
             </form>
         </div>
 
-        <!-- 操作卡片 2: 工人借钱 / 买料代扣 (加 1000 选项) -->
+        <!-- 借钱 / 买料代扣 -->
         <div class="bg-white p-4 sm:p-5 rounded-2xl shadow-sm space-y-4">
             <h2 class="text-sm sm:text-base font-bold text-slate-800 border-b pb-3">
                 💵 工人借钱预支与扣款登记
@@ -156,12 +167,12 @@
                 <div>
                     <label class="block text-xs font-semibold text-slate-600 mb-1">快捷点击借款数额 (RM)：</label>
                     <div class="flex flex-wrap gap-2">
-                        <button type="button" onclick="setAdvAmount(50)" class="px-3.5 py-1.5 bg-slate-100 hover:bg-amber-100 border border-slate-200 text-xs font-bold rounded-lg">RM 50</button>
-                        <button type="button" onclick="setAdvAmount(100)" class="px-3.5 py-1.5 bg-slate-100 hover:bg-amber-100 border border-slate-200 text-xs font-bold rounded-lg">RM 100</button>
-                        <button type="button" onclick="setAdvAmount(200)" class="px-3.5 py-1.5 bg-slate-100 hover:bg-amber-100 border border-slate-200 text-xs font-bold rounded-lg">RM 200</button>
-                        <button type="button" onclick="setAdvAmount(300)" class="px-3.5 py-1.5 bg-slate-100 hover:bg-amber-100 border border-slate-200 text-xs font-bold rounded-lg">RM 300</button>
-                        <button type="button" onclick="setAdvAmount(500)" class="px-3.5 py-1.5 bg-slate-100 hover:bg-amber-100 border border-slate-200 text-xs font-bold rounded-lg">RM 500</button>
-                        <button type="button" onclick="setAdvAmount(1000)" class="px-3.5 py-1.5 bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold rounded-lg shadow-sm">RM 1000</button>
+                        <button type="button" onclick="setAdvAmount(50)" class="px-3.5 py-1.5 bg-slate-100 hover:bg-amber-100 border text-xs font-bold rounded-lg cursor-pointer">RM 50</button>
+                        <button type="button" onclick="setAdvAmount(100)" class="px-3.5 py-1.5 bg-slate-100 hover:bg-amber-100 border text-xs font-bold rounded-lg cursor-pointer">RM 100</button>
+                        <button type="button" onclick="setAdvAmount(200)" class="px-3.5 py-1.5 bg-slate-100 hover:bg-amber-100 border text-xs font-bold rounded-lg cursor-pointer">RM 200</button>
+                        <button type="button" onclick="setAdvAmount(300)" class="px-3.5 py-1.5 bg-slate-100 hover:bg-amber-100 border text-xs font-bold rounded-lg cursor-pointer">RM 300</button>
+                        <button type="button" onclick="setAdvAmount(500)" class="px-3.5 py-1.5 bg-slate-100 hover:bg-amber-100 border text-xs font-bold rounded-lg cursor-pointer">RM 500</button>
+                        <button type="button" onclick="setAdvAmount(1000)" class="px-3.5 py-1.5 bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold rounded-lg shadow-sm cursor-pointer">RM 1000</button>
                     </div>
                 </div>
 
@@ -177,23 +188,23 @@
                 </div>
 
                 <div class="flex justify-end pt-1">
-                    <button type="submit" class="w-full sm:w-48 py-2.5 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-xl text-sm shadow transition">
+                    <button type="submit" class="w-full sm:w-48 py-2.5 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-xl text-sm shadow transition cursor-pointer">
                         💰 确认入账扣支
                     </button>
                 </div>
             </form>
         </div>
 
-        <!-- 月度薪资结算总表 -->
+        <!-- 月度薪资结算总表 (支持到2027/2028及更多年份，自动过滤无工时员工) -->
         <div class="bg-white rounded-2xl shadow-sm overflow-hidden space-y-3 p-4 sm:p-5">
             <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-3 border-b pb-3">
                 <div>
                     <h3 class="font-bold text-slate-900 text-sm sm:text-base">📊 月度工钱与借款汇总结算单</h3>
-                    <p class="text-xs text-slate-400 mt-0.5">工钱合计 - 借支代扣 = 最终应发现金 (Net Pay)</p>
+                    <p class="text-xs text-slate-400 mt-0.5">工钱合计 - 借支代扣 = 最终应发现金 (Net Pay) [注：当月无工时工人自动隐藏]</p>
                 </div>
                 <div class="flex items-center gap-2">
                     <label class="text-xs font-semibold text-slate-600">结算月份:</label>
-                    <input type="month" id="filterMonth" onchange="renderWorkerMonthlySummary()" class="px-3 py-1.5 border rounded-lg text-xs bg-white">
+                    <input type="month" id="filterMonth" onchange="renderWorkerMonthlySummary()" class="px-3 py-1.5 border rounded-lg text-xs bg-white font-bold text-indigo-900">
                 </div>
             </div>
 
@@ -220,16 +231,21 @@
     </div>
 
     <!-- ============================================================== -->
-    <!-- SECTION 2: 全量打卡/借款明细表 (关联绑定，几号在哪做工一目了然)     -->
+    <!-- SECTION 2: 全量打卡/借款明细表 (支持收缩、日期搜索、编辑修改)   -->
     <!-- ============================================================== -->
     <div id="tabDailyDetail" class="space-y-4 sm:space-y-6 hidden">
         <div class="bg-white rounded-2xl shadow-sm p-4 sm:p-5 space-y-4">
             <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-3 border-b pb-3">
                 <div>
                     <h2 class="text-base font-bold text-slate-900">📋 工人每日考勤与借支全量明细</h2>
-                    <p class="text-xs text-slate-500">追踪每个工人每天在哪个工地、工时、当日算薪与具体借款记录</p>
+                    <p class="text-xs text-slate-500">按年月自动收缩分组，支持日期搜索，并可随时编辑修改工时与备注</p>
                 </div>
                 <div class="flex flex-wrap items-center gap-2">
+                    <!-- 日期搜索输入框 -->
+                    <div class="flex items-center gap-1">
+                        <input type="date" id="detailSearchDate" onchange="renderDailyDetailTable()" placeholder="搜索日期" class="px-3 py-1.5 border rounded-xl text-xs bg-white">
+                        <button onclick="document.getElementById('detailSearchDate').value=''; renderDailyDetailTable();" class="px-2 py-1.5 bg-slate-100 text-xs rounded-xl text-slate-600 cursor-pointer">重置日期</button>
+                    </div>
                     <select id="detailWorkerFilter" onchange="renderDailyDetailTable()" class="px-3 py-1.5 border rounded-xl text-xs bg-white">
                         <option value="">全部工人</option>
                     </select>
@@ -239,54 +255,24 @@
                 </div>
             </div>
 
-            <!-- 出勤每日流水表 -->
-            <div class="space-y-2">
-                <h3 class="text-xs font-bold text-indigo-900 uppercase">工人工时出勤流水 (已按日期排序)</h3>
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left border-collapse text-xs sm:text-sm">
-                        <thead>
-                            <tr class="bg-slate-50 text-slate-500 font-semibold border-b">
-                                <th class="p-2.5">日期</th>
-                                <th class="p-2.5">工人姓名</th>
-                                <th class="p-2.5">施工工地</th>
-                                <th class="p-2.5">工时 (h)</th>
-                                <th class="p-2.5">当日算薪 (RM)</th>
-                                <th class="p-2.5">现场备注</th>
-                                <th class="p-2.5 text-right">操作</th>
-                            </tr>
-                        </thead>
-                        <tbody id="dailyAttendanceDetailBody" class="divide-y divide-slate-100"></tbody>
-                    </table>
-                </div>
+            <!-- 出勤每日流水表 (按年月收缩容器) -->
+            <div class="space-y-3">
+                <h3 class="text-xs font-bold text-indigo-900 uppercase">工人工时出勤流水 (按年月收缩分组)</h3>
+                <div id="dailyAttendanceGroupContainer" class="space-y-2"></div>
             </div>
 
-            <!-- 借款每日流水表 -->
-            <div class="space-y-2 pt-4 border-t">
-                <h3 class="text-xs font-bold text-amber-900 uppercase">工人预支借钱 / 代扣明细</h3>
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left border-collapse text-xs sm:text-sm">
-                        <thead>
-                            <tr class="bg-amber-50/50 text-slate-600 font-semibold border-b">
-                                <th class="p-2.5">借支日期</th>
-                                <th class="p-2.5">借款工人</th>
-                                <th class="p-2.5">款项类型</th>
-                                <th class="p-2.5 text-amber-700">金额 (RM)</th>
-                                <th class="p-2.5">原因/备注</th>
-                                <th class="p-2.5 text-right">操作</th>
-                            </tr>
-                        </thead>
-                        <tbody id="dailyAdvanceDetailBody" class="divide-y divide-slate-100"></tbody>
-                    </table>
-                </div>
+            <!-- 借款每日流水表 (按年月收缩容器) -->
+            <div class="space-y-3 pt-4 border-t">
+                <h3 class="text-xs font-bold text-amber-900 uppercase">工人预支借钱 / 代扣明细 (按年月收缩分组)</h3>
+                <div id="dailyAdvanceGroupContainer" class="space-y-2"></div>
             </div>
         </div>
     </div>
 
     <!-- ============================================================== -->
-    <!-- SECTION 3: Subcon 分包与垫付管理 (含垫付人、Claim、Advance快捷)   -->
+    <!-- SECTION 3: Subcon 分包与垫付管理 (默认隐藏，密码解锁)             -->
     <!-- ============================================================== -->
     <div id="tabSubcon" class="space-y-4 sm:space-y-6 hidden">
-
         <!-- 统计面板 -->
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div class="bg-white p-4 rounded-xl shadow-sm border-l-4 border-indigo-500">
@@ -306,10 +292,14 @@
             </div>
         </div>
 
-        <!-- 建立合同 -->
+        <!-- 建立合同 (带签约日期) -->
         <div class="bg-white p-4 sm:p-5 rounded-2xl shadow-sm space-y-3">
             <h2 class="text-sm sm:text-base font-bold text-slate-800 border-b pb-2.5">➕ 建立 Subcon 分包工程合同</h2>
-            <form onsubmit="handleNewSubconSubmit(event)" class="grid grid-cols-1 sm:grid-cols-4 gap-3">
+            <form onsubmit="handleNewSubconSubmit(event)" class="grid grid-cols-1 sm:grid-cols-5 gap-3">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">签约日期</label>
+                    <input type="date" id="subContractDate" required class="w-full px-3 py-2 border rounded-xl text-sm bg-white">
+                </div>
                 <div>
                     <label class="block text-xs font-semibold text-slate-600 mb-1">工程项目名称</label>
                     <input type="text" id="subProjectName" required placeholder="如: Kamunting 厂房铁工" class="w-full px-3 py-2 border rounded-xl text-sm">
@@ -372,7 +362,7 @@
                     <div>
                         <div class="flex items-center justify-between mb-1">
                             <label class="text-xs font-semibold text-slate-600">备注说明</label>
-                            <button type="button" onclick="setSubconNoteAdvance()" class="text-[10px] bg-amber-100 hover:bg-amber-200 text-amber-800 font-bold px-2 py-0.5 rounded">
+                            <button type="button" onclick="setSubconNoteAdvance()" class="text-[10px] bg-amber-100 hover:bg-amber-200 text-amber-800 font-bold px-2 py-0.5 rounded cursor-pointer">
                                 + 快捷填入 "Advance"
                             </button>
                         </div>
@@ -388,20 +378,18 @@
             </form>
         </div>
 
-        <!-- 对账看板与修改编辑 -->
+        <!-- 对账看板 -->
         <div class="bg-white rounded-2xl shadow-sm p-4 sm:p-5 space-y-4">
             <h3 class="font-bold text-slate-900 text-sm sm:text-base border-b pb-2">📋 Subcon 工程对账单与领款清单 (支持修改编辑)</h3>
             <div id="subconCardsContainer" class="space-y-4"></div>
         </div>
-
     </div>
 
     <!-- ============================================================== -->
-    <!-- SECTION 4: Marco 现金收支与 Claim 备用金模块 (IN & OUT)           -->
+    <!-- SECTION 4: Marco 现金收支与 Claim 模块 (默认隐藏，带公司/店铺名) -->
     <!-- ============================================================== -->
     <div id="tabPettyCash" class="space-y-4 sm:space-y-6 hidden">
-        
-        <!-- Marco 备用金总结算面板 -->
+        <!-- 总结算面板 -->
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div class="bg-gradient-to-br from-rose-500 to-rose-700 text-white p-4 rounded-xl shadow-sm">
                 <div class="text-xs opacity-80 uppercase font-semibold">Marco 垫付总额 (OUT)</div>
@@ -420,7 +408,7 @@
             </div>
         </div>
 
-        <!-- 记一笔 (支出 / 收款) -->
+        <!-- 记一笔 (带公司/店铺名字段) -->
         <div class="bg-white p-4 sm:p-5 rounded-2xl shadow-sm space-y-4">
             <h2 class="text-base font-bold text-slate-900 border-b pb-2.5">✍️ 记录现金流水 (买料/维修垫付 或 工地收现)</h2>
             <form onsubmit="handlePettyCashSubmit(event)" class="space-y-3">
@@ -433,12 +421,12 @@
                         </select>
                     </div>
                     <div>
-                        <label class="block text-xs font-semibold text-slate-600 mb-1">发生日期</label>
-                        <input type="date" id="pettyDate" required class="w-full px-3 py-2 border rounded-xl text-sm bg-white">
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">公司 / 店铺名称</label>
+                        <input type="text" id="pettyShopName" required placeholder="如: 99 Speedmart / 某五金店" class="w-full px-3 py-2 border rounded-xl text-sm bg-white font-medium text-indigo-900">
                     </div>
                     <div>
-                        <label class="block text-xs font-semibold text-slate-600 mb-1">发生时间</label>
-                        <input type="time" id="pettyTime" required class="w-full px-3 py-2 border rounded-xl text-sm bg-white">
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">发生日期</label>
+                        <input type="date" id="pettyDate" required class="w-full px-3 py-2 border rounded-xl text-sm bg-white">
                     </div>
                     <div>
                         <label class="block text-xs font-semibold text-slate-600 mb-1">金额 (RM)</label>
@@ -446,7 +434,11 @@
                     </div>
                 </div>
 
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div class="grid grid-cols-1 sm:grid-cols-4 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">发生时间</label>
+                        <input type="time" id="pettyTime" required class="w-full px-3 py-2 border rounded-xl text-sm bg-white">
+                    </div>
                     <div>
                         <label class="block text-xs font-semibold text-slate-600 mb-1">分类</label>
                         <select id="pettyCategory" class="w-full px-3 py-2 border rounded-xl text-sm bg-white font-medium">
@@ -462,8 +454,8 @@
                         <input type="text" id="pettyReceiptNo" placeholder="如: Inv-9921、Cash Bill 018" class="w-full px-3 py-2 border rounded-xl text-sm">
                     </div>
                     <div>
-                        <label class="block text-xs font-semibold text-slate-600 mb-1">具体内容原因 (买什么/收什么钱)</label>
-                        <input type="text" id="pettyDescription" required placeholder="例如：买铁线两捆、吊车补胎、卖废钢筋收现" class="w-full px-3 py-2 border rounded-xl text-sm">
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">具体内容原因</label>
+                        <input type="text" id="pettyDescription" required placeholder="例如：买铁线两捆、吊车补胎" class="w-full px-3 py-2 border rounded-xl text-sm">
                     </div>
                 </div>
 
@@ -475,42 +467,85 @@
             </form>
         </div>
 
-        <!-- 备用金流水表与书记 Claim 功能 -->
+        <!-- 备用金流水表 (支持按年月收缩与搜索) -->
         <div class="bg-white rounded-2xl shadow-sm p-4 sm:p-5 space-y-4">
             <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-2 border-b pb-3">
                 <div>
-                    <h3 class="font-bold text-slate-900 text-sm sm:text-base">📑 Marco 现金流水账本 (书记查账与核销 Claim 专用)</h3>
-                    <p class="text-xs text-slate-500">公司出钱报销后，书记点击“确认 Claimed”并填入对应 Payment Voucher (PV) 编号</p>
+                    <h3 class="font-bold text-slate-900 text-sm sm:text-base">📑 Marco 现金流水账本 (按年月收缩分组与查账)</h3>
+                    <p class="text-xs text-slate-500">公司出钱报销后，书记点击“确认 Claimed”并填入对应 PV 编号</p>
                 </div>
             </div>
 
-            <div class="overflow-x-auto">
-                <table class="w-full text-left border-collapse text-xs sm:text-sm">
-                    <thead>
-                        <tr class="bg-slate-50 text-slate-500 font-semibold border-b">
-                            <th class="p-2.5">日期时间</th>
-                            <th class="p-2.5">类型</th>
-                            <th class="p-2.5">分类</th>
-                            <th class="p-2.5">内容原因</th>
-                            <th class="p-2.5">单据号</th>
-                            <th class="p-2.5">金额 (RM)</th>
-                            <th class="p-2.5">报销状态 (PV Number)</th>
-                            <th class="p-2.5 text-right">操作</th>
-                        </tr>
-                    </thead>
-                    <tbody id="pettyCashTableBody" class="divide-y divide-slate-100"></tbody>
-                </table>
-            </div>
+            <!-- 流水账本收缩分组容器 -->
+            <div id="pettyCashGroupContainer" class="space-y-3"></div>
         </div>
-
     </div>
 
     <!-- ============================================================== -->
-    <!-- SECTION 5: 基础名录管理 (含管理密码 2321、修改与软删除保护)       -->
+    <!-- SECTION 5: 工地工钱总和搜索功能                                  -->
+    <!-- ============================================================== -->
+    <div id="tabSiteSearch" class="space-y-4 sm:space-y-6 hidden">
+        <div class="bg-white p-4 sm:p-5 rounded-2xl shadow-sm space-y-4">
+            <div class="border-b pb-3">
+                <h2 class="text-base font-bold text-slate-900">🔍 工地工钱与考勤综合搜索</h2>
+                <p class="text-xs text-slate-500 mt-0.5">选择或输入要查询的工地名称，系统将自动汇总该工地总共用了多少工钱、总工时及所有员工工作记录。</p>
+            </div>
+
+            <div class="flex flex-col sm:flex-row gap-3 items-center">
+                <select id="searchSiteSelect" class="w-full sm:flex-1 px-3 py-2.5 border rounded-xl text-sm bg-white font-bold text-indigo-900">
+                    <option value="">-- 请选择或切换要查询的工地 --</option>
+                </select>
+                <button onclick="executeSiteSearch()" class="w-full sm:w-40 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-sm shadow cursor-pointer">
+                    开始统计搜索
+                </button>
+            </div>
+
+            <!-- 搜索统计看板 -->
+            <div id="siteSearchStats" class="grid grid-cols-1 sm:grid-cols-3 gap-3 hidden">
+                <div class="bg-indigo-50 border border-indigo-200 p-4 rounded-xl">
+                    <div class="text-xs text-indigo-600 font-bold">该工地总工钱支出 (RM)</div>
+                    <div class="text-2xl font-black text-indigo-900 mt-1">RM <span id="statSiteTotalWage">0.00</span></div>
+                </div>
+                <div class="bg-slate-50 border border-slate-200 p-4 rounded-xl">
+                    <div class="text-xs text-slate-500 font-bold">该工地总消耗工时 (h)</div>
+                    <div class="text-2xl font-black text-slate-800 mt-1"><span id="statSiteTotalHours">0.0</span> h</div>
+                </div>
+                <div class="bg-emerald-50 border border-emerald-200 p-4 rounded-xl">
+                    <div class="text-xs text-emerald-600 font-bold">出勤记录总笔数</div>
+                    <div class="text-2xl font-black text-emerald-800 mt-1"><span id="statSiteRecordCount">0</span> 笔</div>
+                </div>
+            </div>
+
+            <!-- 该工地员工明细表格 -->
+            <div class="space-y-2 pt-2">
+                <h3 class="text-xs font-bold text-slate-700 uppercase">该工地全部员工工作明细记录：</h3>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse text-xs sm:text-sm">
+                        <thead>
+                            <tr class="bg-slate-50 text-slate-500 font-semibold border-b">
+                                <th class="p-2.5">日期</th>
+                                <th class="p-2.5">工人姓名</th>
+                                <th class="p-2.5">工种</th>
+                                <th class="p-2.5">工时 (h)</th>
+                                <th class="p-2.5">当日算薪 (RM)</th>
+                                <th class="p-2.5">施工备注</th>
+                            </tr>
+                        </thead>
+                        <tbody id="siteSearchTableBody" class="divide-y divide-slate-100">
+                            <tr><td colspan="6" class="p-6 text-center text-slate-400">请选择工地并点击搜索按钮</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================================== -->
+    <!-- SECTION 6: 基础名录管理 (含密码保护、解除隐藏功能)               -->
     <!-- ============================================================== -->
     <div id="tabManage" class="space-y-4 sm:space-y-6 hidden">
         
-        <!-- 预设工人名单 -->
+        <!-- 预设工人名单 (编辑/注销带安全锁) -->
         <div class="bg-white p-4 sm:p-5 rounded-2xl shadow-sm space-y-3">
             <h2 class="text-sm sm:text-base font-bold text-slate-800 border-b pb-2.5">👤 预先注册工人档案 (带工种类型)</h2>
             <form onsubmit="handleNewWorkerSubmit(event)" class="grid grid-cols-1 sm:grid-cols-5 gap-3">
@@ -554,7 +589,7 @@
                             <th class="p-2.5">证件号码</th>
                             <th class="p-2.5">日薪 (8h)</th>
                             <th class="p-2.5">折算时薪</th>
-                            <th class="p-2.5 text-right">管理操作 (需密码2321)</th>
+                            <th class="p-2.5 text-right">管理操作 (安全锁)</th>
                         </tr>
                     </thead>
                     <tbody id="registeredWorkersBody" class="divide-y divide-slate-100"></tbody>
@@ -562,26 +597,33 @@
             </div>
         </div>
 
-        <!-- 预设工地管理 -->
+        <!-- 预设工地管理 (含隐藏与解除隐藏入口) -->
         <div class="bg-white p-4 sm:p-5 rounded-2xl shadow-sm space-y-3">
-            <h2 class="text-sm sm:text-base font-bold text-slate-800 border-b pb-2.5">🏢 预先添加与管理工地名称</h2>
+            <h2 class="text-sm sm:text-base font-bold text-slate-800 border-b pb-2.5">🏢 预先添加与管理工地名称 (支持隐藏与解除隐藏)</h2>
             <form onsubmit="handleNewSiteSubmit(event)" class="flex gap-2">
                 <input type="text" id="newSiteName" required placeholder="输入新工地名，如: Kamunting 新厂房B区" class="flex-1 px-3 py-2 border rounded-xl text-sm">
                 <button type="submit" class="px-5 py-2 bg-slate-800 hover:bg-black text-white font-bold rounded-xl text-sm cursor-pointer">
                     添加工地
                 </button>
             </form>
-            <div id="siteTagsArea" class="space-y-2 pt-2"></div>
+            <div class="pt-2">
+                <h3 class="text-xs font-bold text-slate-600 mb-1">活跃工地列表：</h3>
+                <div id="siteTagsArea" class="space-y-2"></div>
+            </div>
+            <div class="pt-3 border-t">
+                <h3 class="text-xs font-bold text-slate-600 mb-1">已隐藏工地列表 (可通过解除隐藏恢复)：</h3>
+                <div id="archivedSiteTagsArea" class="space-y-2"></div>
+            </div>
         </div>
 
     </div>
 
 </div>
 
-<!-- 弹窗 1: 编辑工人资料 (密码 2321 校验) -->
+<!-- 弹窗 1: 编辑工人资料 (安全锁校验) -->
 <div id="editWorkerModal" class="hidden fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
     <div class="bg-white rounded-2xl shadow-xl max-w-md w-full p-5 space-y-3">
-        <h3 class="text-base font-bold text-slate-900 border-b pb-2">✏️ 修改员工档案 (管理模式)</h3>
+        <h3 class="text-base font-bold text-slate-900 border-b pb-2">✏️ 修改员工档案 (管理操作安全锁)</h3>
         <input type="hidden" id="editWorkerId">
         <div>
             <label class="block text-xs font-semibold text-slate-600 mb-1">工人全名</label>
@@ -604,8 +646,8 @@
             <input type="number" step="0.5" id="editWorkerRate" class="w-full px-3 py-2 border rounded-xl text-sm font-bold text-indigo-700">
         </div>
         <div class="flex justify-end gap-2 pt-2 border-t">
-            <button type="button" onclick="closeEditWorkerModal()" class="px-4 py-2 bg-slate-100 rounded-xl text-xs font-semibold">取消</button>
-            <button type="button" onclick="submitEditWorker()" class="px-4 py-2 bg-indigo-600 text-white rounded-xl text-xs font-bold">保存更新</button>
+            <button type="button" onclick="closeEditWorkerModal()" class="px-4 py-2 bg-slate-100 rounded-xl text-xs font-semibold cursor-pointer">取消</button>
+            <button type="button" onclick="submitEditWorker()" class="px-4 py-2 bg-indigo-600 text-white rounded-xl text-xs font-bold cursor-pointer">保存更新</button>
         </div>
     </div>
 </div>
@@ -615,6 +657,10 @@
     <div class="bg-white rounded-2xl shadow-xl max-w-md w-full p-5 space-y-3">
         <h3 class="text-base font-bold text-slate-900 border-b pb-2">✏️ 修改分包工程合同</h3>
         <input type="hidden" id="editSubContractId">
+        <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">签约日期</label>
+            <input type="date" id="editSubContractDate" class="w-full px-3 py-2 border rounded-xl text-sm">
+        </div>
         <div>
             <label class="block text-xs font-semibold text-slate-600 mb-1">工程项目名称</label>
             <input type="text" id="editSubProjectName" class="w-full px-3 py-2 border rounded-xl text-sm">
@@ -628,8 +674,8 @@
             <input type="number" step="0.01" id="editSubBaseAmount" class="w-full px-3 py-2 border rounded-xl text-sm font-bold text-indigo-700">
         </div>
         <div class="flex justify-end gap-2 pt-2 border-t">
-            <button type="button" onclick="closeEditSubconContractModal()" class="px-4 py-2 bg-slate-100 rounded-xl text-xs font-semibold">取消</button>
-            <button type="button" onclick="submitEditSubconContract()" class="px-4 py-2 bg-indigo-600 text-white rounded-xl text-xs font-bold">保存修改</button>
+            <button type="button" onclick="closeEditSubconContractModal()" class="px-4 py-2 bg-slate-100 rounded-xl text-xs font-semibold cursor-pointer">取消</button>
+            <button type="button" onclick="submitEditSubconContract()" class="px-4 py-2 bg-indigo-600 text-white rounded-xl text-xs font-bold cursor-pointer">保存修改</button>
         </div>
     </div>
 </div>
@@ -638,7 +684,7 @@
 <div id="claimPvModal" class="hidden fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
     <div class="bg-white rounded-2xl shadow-xl max-w-sm w-full p-5 space-y-3">
         <h3 class="text-base font-bold text-slate-900 border-b pb-2">🧾 确认已报销付款 (Claimed)</h3>
-        <input type="hidden" id="claimTargetType"> <!-- 'subcon' or 'petty' -->
+        <input type="hidden" id="claimTargetType">
         <input type="hidden" id="claimTargetId">
         <p class="text-xs text-slate-600">请输入本次出账对应的公司付款单号 (Payment Voucher)：</p>
         <div>
@@ -646,8 +692,8 @@
             <input type="text" id="claimPvInput" required placeholder="如: PV2026-09-001" class="w-full px-3 py-2 border rounded-xl text-sm font-mono font-bold">
         </div>
         <div class="flex justify-end gap-2 pt-2 border-t">
-            <button type="button" onclick="closeClaimPvModal()" class="px-4 py-2 bg-slate-100 rounded-xl text-xs font-semibold">取消</button>
-            <button type="button" onclick="submitClaimPv()" class="px-4 py-2 bg-emerald-600 text-white rounded-xl text-xs font-bold">确认报销</button>
+            <button type="button" onclick="closeClaimPvModal()" class="px-4 py-2 bg-slate-100 rounded-xl text-xs font-semibold cursor-pointer">取消</button>
+            <button type="button" onclick="submitClaimPv()" class="px-4 py-2 bg-emerald-600 text-white rounded-xl text-xs font-bold cursor-pointer">确认报销</button>
         </div>
     </div>
 </div>
@@ -670,15 +716,36 @@
             <input type="number" step="0.01" id="voAmt" placeholder="0.00" class="w-full px-3 py-2 border rounded-xl text-sm font-bold text-indigo-700">
         </div>
         <div class="flex justify-end gap-2 pt-2 border-t">
-            <button type="button" onclick="closeVoModal()" class="px-4 py-2 bg-slate-100 rounded-xl text-xs font-semibold">取消</button>
-            <button type="button" onclick="submitVoRecord()" class="px-4 py-2 bg-indigo-600 text-white rounded-xl text-xs font-bold">确认追加</button>
+            <button type="button" onclick="closeVoModal()" class="px-4 py-2 bg-slate-100 rounded-xl text-xs font-semibold cursor-pointer">取消</button>
+            <button type="button" onclick="submitVoRecord()" class="px-4 py-2 bg-indigo-600 text-white rounded-xl text-xs font-bold cursor-pointer">确认追加</button>
+        </div>
+    </div>
+</div>
+
+<!-- 弹窗 5: 编辑修改考勤记录工时与备注 -->
+<div id="editAttendanceModal" class="hidden fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-xl max-w-md w-full p-5 space-y-3">
+        <h3 class="text-base font-bold text-slate-900 border-b pb-2">✏️ 修改出勤工时与备注</h3>
+        <input type="hidden" id="editAttId">
+        <div class="text-xs text-slate-500">工人: <span id="editAttWorkerName" class="font-bold text-slate-800"></span> | 工地: <span id="editAttSiteName" class="font-bold text-slate-800"></span></div>
+        <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">工作时长 (小时)</label>
+            <input type="number" step="0.5" id="editAttHours" class="w-full px-3 py-2 border rounded-xl text-sm font-bold text-indigo-700">
+        </div>
+        <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">施工内容 / 备注</label>
+            <input type="text" id="editAttNote" class="w-full px-3 py-2 border rounded-xl text-sm">
+        </div>
+        <div class="flex justify-end gap-2 pt-2 border-t">
+            <button type="button" onclick="closeEditAttendanceModal()" class="px-4 py-2 bg-slate-100 rounded-xl text-xs font-semibold cursor-pointer">取消</button>
+            <button type="button" onclick="submitEditAttendance()" class="px-4 py-2 bg-indigo-600 text-white rounded-xl text-xs font-bold cursor-pointer">保存修改</button>
         </div>
     </div>
 </div>
 
 <script>
     // ==============================================================
-    // 1. 系统配置 (直接读取你的真实项目)
+    // 1. 系统配置与Supabase连接
     // ==============================================================
     const SUPABASE_URL = "https://xiplmlalurpnrnzeaywp.supabase.co/rest/v1";
     const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhpcGxtbGFsdXJwbnJuemVheXdwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg0Mjk2NjYsImV4cCI6MjEwNDAwNTY2Nn0.uIRTO0MAvQHGzQzdWwWZCufeMsnuU9LQTHUOI60lTXQ";
@@ -700,6 +767,9 @@
     let subconVos = [];
     let pettyCashList = [];
 
+    // 访问权限控制状态
+    let isManagementUnlocked = false;
+
     function initSystemDates() {
         const now = new Date();
         const y = now.getFullYear();
@@ -712,6 +782,8 @@
         document.getElementById('advDate').value = todayStr;
         document.getElementById('filterMonth').value = monthStr;
         document.getElementById('pettyDate').value = todayStr;
+        const subDate = document.getElementById('subContractDate');
+        if(subDate) subDate.value = todayStr;
 
         const h = String(now.getHours()).padStart(2, '0');
         const min = String(now.getMinutes()).padStart(2, '0');
@@ -737,12 +809,38 @@
         renderDailyDetailTable();
         renderSubconDashboard();
         renderPettyCashTable();
+        populateSiteSearchDropdown();
+    }
+
+    function toggleManagementMode() {
+        if (isManagementUnlocked) {
+            isManagementUnlocked = false;
+            document.getElementById('mgmtUnlockBtn').innerText = "🔒 管理模式 (未解锁)";
+            document.getElementById('mgmtUnlockBtn').className = "px-3.5 py-2 bg-slate-900 hover:bg-black text-white text-xs sm:text-sm font-bold rounded-xl transition cursor-pointer";
+            document.getElementById('navSubconBtn').classList.add('hidden');
+            document.getElementById('navPettyCashBtn').classList.add('hidden');
+            alert("已退出管理模式，敏感模块已重新隐藏。");
+            switchMainTab('workers');
+        } else {
+            const pwd = prompt("请输入管理密码：");
+            if (pwd === "8888") {
+                isManagementUnlocked = true;
+                document.getElementById('mgmtUnlockBtn').innerText = "🔓 管理模式 (已解锁)";
+                document.getElementById('mgmtUnlockBtn').className = "px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs sm:text-sm font-bold rounded-xl transition cursor-pointer";
+                document.getElementById('navSubconBtn').classList.remove('hidden');
+                document.getElementById('navPettyCashBtn').classList.remove('hidden');
+                alert("✅ 管理密码正确！Subcon分包与Marco现金模块已解锁显示。");
+            } else if (pwd !== null) {
+                alert("❌ 密码错误！");
+            }
+        }
     }
 
     function switchMainTab(tab) {
-        ['Workers', 'DailyDetail', 'Subcon', 'PettyCash', 'Manage'].forEach(t => {
+        ['Workers', 'DailyDetail', 'Subcon', 'PettyCash', 'SiteSearch', 'Manage'].forEach(t => {
             const btn = document.getElementById(`nav${t}Btn`);
             const panel = document.getElementById(`tab${t}`);
+            if(!btn || !panel) return;
             if (t.toLowerCase() === tab.toLowerCase()) {
                 panel.classList.remove('hidden');
                 btn.className = "px-3 sm:px-4 py-2.5 text-xs sm:text-sm font-bold border-b-2 border-indigo-600 text-indigo-600 transition flex items-center gap-1.5 whitespace-nowrap cursor-pointer";
@@ -784,11 +882,11 @@
     }
 
     // ==============================================================
-    // 2. 基础名录 (工人带工种类型、密码 2321 编辑、工地软删除保护)
+    // 2. 基础名录 (工人、工地隐藏与解除隐藏)
     // ==============================================================
     async function fetchWorkers() {
         try {
-            const res = await fetch(`${SUPABASE_URL}/workers?status=eq.active&order=name.asc`, { headers: reqHeaders });
+            const res = await fetch(`${SUPABASE_URL}/workers?order=name.asc`, { headers: reqHeaders });
             workersList = await res.json();
             renderWorkerSelectors();
             renderWorkerAdminTable();
@@ -797,19 +895,21 @@
 
     async function fetchSites() {
         try {
-            const res = await fetch(`${SUPABASE_URL}/job_sites?status=eq.active&order=id.asc`, { headers: reqHeaders });
+            const res = await fetch(`${SUPABASE_URL}/job_sites?order=id.asc`, { headers: reqHeaders });
             sitesList = await res.json();
             renderSiteSelectors();
+            populateSiteSearchDropdown();
         } catch (e) { console.error(e); }
     }
 
     function renderWorkerSelectors() {
         const checkList = document.getElementById('workerCheckboxList');
         checkList.innerHTML = '';
-        if (workersList.length === 0) {
-            checkList.innerHTML = '<div class="text-xs text-slate-400 col-span-full py-4 text-center">暂无工人，请先在名录中录入</div>';
+        const activeWorkers = workersList.filter(w => w.status === 'active');
+        if (activeWorkers.length === 0) {
+            checkList.innerHTML = '<div class="text-xs text-slate-400 col-span-full py-4 text-center">暂无活跃工人，请先在名录中录入</div>';
         } else {
-            workersList.forEach(w => {
+            activeWorkers.forEach(w => {
                 const label = document.createElement('label');
                 label.className = "flex items-center gap-2 p-2 bg-white rounded-lg border border-slate-200 cursor-pointer hover:border-indigo-400 transition text-xs";
                 label.innerHTML = `
@@ -825,14 +925,13 @@
 
         const advSelect = document.getElementById('advWorkerSelect');
         advSelect.innerHTML = '<option value="">-- 请选择借款工人 --</option>';
-        workersList.forEach(w => {
+        activeWorkers.forEach(w => {
             advSelect.innerHTML += `<option value="${w.id}">${escapeHtml(w.name)} (${escapeHtml(w.worker_type || '工人')})</option>`;
         });
 
-        // 明细表的筛选下拉
         const detailFilter = document.getElementById('detailWorkerFilter');
         detailFilter.innerHTML = '<option value="">全部工人</option>';
-        workersList.forEach(w => {
+        activeWorkers.forEach(w => {
             detailFilter.innerHTML += `<option value="${w.id}">${escapeHtml(w.name)}</option>`;
         });
     }
@@ -845,26 +944,45 @@
         const siteSelect = document.getElementById('attSiteName');
         const detailSiteFilter = document.getElementById('detailSiteFilter');
         const tagsArea = document.getElementById('siteTagsArea');
+        const archivedTagsArea = document.getElementById('archivedSiteTagsArea');
+        
         siteSelect.innerHTML = '';
         detailSiteFilter.innerHTML = '<option value="">全部工地</option>';
         tagsArea.innerHTML = '';
+        archivedTagsArea.innerHTML = '';
 
-        sitesList.forEach(s => {
+        const activeSites = sitesList.filter(s => s.status === 'active');
+        const archivedSites = sitesList.filter(s => s.status === 'archived');
+
+        activeSites.forEach(s => {
             siteSelect.innerHTML += `<option value="${escapeHtml(s.site_name)}">${escapeHtml(s.site_name)}</option>`;
             detailSiteFilter.innerHTML += `<option value="${escapeHtml(s.site_name)}">${escapeHtml(s.site_name)}</option>`;
             
-            // 可编辑和删除的工地标签
             const div = document.createElement('div');
             div.className = "flex items-center justify-between p-2 bg-slate-50 border border-slate-200 rounded-xl text-xs";
             div.innerHTML = `
                 <span class="font-bold text-slate-800">📍 ${escapeHtml(s.site_name)}</span>
                 <div class="space-x-2">
-                    <button type="button" onclick="editSiteName(${s.id}, '${escapeHtml(s.site_name)}')" class="text-indigo-600 hover:underline">改名</button>
-                    <button type="button" onclick="archiveSite(${s.id})" class="text-rose-500 hover:underline">隐藏/移除</button>
+                    <button type="button" onclick="editSiteName(${s.id}, '${escapeHtml(s.site_name)}')" class="text-indigo-600 hover:underline cursor-pointer">改名</button>
+                    <button type="button" onclick="updateSiteStatus(${s.id}, 'archived')" class="text-rose-500 hover:underline cursor-pointer">隐藏工地</button>
                 </div>
             `;
             tagsArea.appendChild(div);
         });
+
+        if (archivedSites.length === 0) {
+            archivedTagsArea.innerHTML = '<div class="text-[11px] text-slate-400">无隐藏工地</div>';
+        } else {
+            archivedSites.forEach(s => {
+                const div = document.createElement('div');
+                div.className = "flex items-center justify-between p-2 bg-amber-50/50 border border-amber-200 rounded-xl text-xs";
+                div.innerHTML = `
+                    <span class="text-slate-500 line-through">📍 ${escapeHtml(s.site_name)}</span>
+                    <button type="button" onclick="updateSiteStatus(${s.id}, 'active')" class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg cursor-pointer">解除隐藏 (恢复)</button>
+                `;
+                archivedTagsArea.appendChild(div);
+            });
+        }
     }
 
     async function handleNewWorkerSubmit(e) {
@@ -880,7 +998,7 @@
             const res = await fetch(`${SUPABASE_URL}/workers`, {
                 method: "POST",
                 headers: reqHeaders,
-                body: JSON.stringify([{ name, worker_type, ic_passport, phone, daily_rate, hourly_rate }])
+                body: JSON.stringify([{ name, worker_type, ic_passport, phone, daily_rate, hourly_rate, status: 'active' }])
             });
             if (!res.ok) throw new Error("保存工人失败");
             document.getElementById('workerName').value = '';
@@ -896,26 +1014,26 @@
         const tbody = document.getElementById('registeredWorkersBody');
         tbody.innerHTML = '';
         workersList.forEach(w => {
+            const isActive = w.status === 'active';
             tbody.innerHTML += `
-                <tr class="hover:bg-slate-50">
-                    <td class="p-2.5 font-bold text-slate-800">${escapeHtml(w.name)}</td>
+                <tr class="hover:bg-slate-50 ${!isActive ? 'opacity-60 bg-slate-100' : ''}">
+                    <td class="p-2.5 font-bold text-slate-800">${escapeHtml(w.name)} ${!isActive ? '<span class="text-xs text-rose-500">(已注销)</span>' : ''}</td>
                     <td class="p-2.5"><span class="px-2 py-0.5 rounded text-[11px] font-bold bg-indigo-50 text-indigo-700">${escapeHtml(w.worker_type || '中工')}</span></td>
                     <td class="p-2.5 text-slate-500 font-mono text-xs">${escapeHtml(w.ic_passport)}</td>
                     <td class="p-2.5 font-semibold text-indigo-700">RM ${Number(w.daily_rate).toFixed(2)}</td>
                     <td class="p-2.5 text-slate-600 font-mono">RM ${Number(w.hourly_rate).toFixed(2)}/h</td>
                     <td class="p-2.5 text-right space-x-2">
-                        <button onclick="openEditWorkerModal(${w.id})" class="text-indigo-600 hover:underline">编辑</button>
-                        <button onclick="archiveWorker(${w.id})" class="text-rose-500 hover:underline">注销</button>
+                        <button onclick="openEditWorkerModal(${w.id})" class="text-indigo-600 hover:underline cursor-pointer">编辑</button>
+                        ${isActive ? `<button onclick="archiveWorker(${w.id})" class="text-rose-500 hover:underline cursor-pointer">注销</button>` : `<button onclick="restoreWorker(${w.id})" class="text-emerald-600 hover:underline cursor-pointer">恢复</button>`}
                     </td>
                 </tr>
             `;
         });
     }
 
-    // 员工编辑 (校验密码 2321)
     function openEditWorkerModal(id) {
-        const pwd = prompt("请输入管理编辑密码：");
-        if (pwd !== "2321") return alert("❌ 密码错误，无权限编辑员工信息！");
+        const pwd = prompt("🔒 管理操作（安全锁）：请输入管理编辑密码：");
+        if (pwd !== "2321" && pwd !== "8888") return alert("❌ 密码错误，无权限编辑员工信息！");
 
         const w = workersList.find(item => item.id === id);
         if (!w) return;
@@ -955,7 +1073,8 @@
     }
 
     async function archiveWorker(id) {
-        if (!confirm('确定将该工人设为停用状态？历史工时与结算数据将完整保留。')) return;
+        const pwd = prompt("🔒 管理操作（安全锁）：请输入注销密码：");
+        if (pwd !== "2321" && pwd !== "8888") return alert("❌ 密码错误！");
         await fetch(`${SUPABASE_URL}/workers?id=eq.${id}`, {
             method: "PATCH",
             headers: reqHeaders,
@@ -964,7 +1083,15 @@
         await fetchWorkers();
     }
 
-    // 工地改名与软删除 (不删关联记录)
+    async function restoreWorker(id) {
+        await fetch(`${SUPABASE_URL}/workers?id=eq.${id}`, {
+            method: "PATCH",
+            headers: reqHeaders,
+            body: JSON.stringify({ status: 'active' })
+        });
+        await fetchWorkers();
+    }
+
     async function handleNewSiteSubmit(e) {
         e.preventDefault();
         const site_name = document.getElementById('newSiteName').value.trim();
@@ -988,18 +1115,17 @@
         await fetchSites();
     }
 
-    async function archiveSite(id) {
-        if (!confirm('确定隐藏该工地？已记录的历史考勤流水不会受到任何影响。')) return;
+    async function updateSiteStatus(id, newStatus) {
         await fetch(`${SUPABASE_URL}/job_sites?id=eq.${id}`, {
             method: "PATCH",
             headers: reqHeaders,
-            body: JSON.stringify({ status: 'archived' })
+            body: JSON.stringify({ status: newStatus })
         });
         await fetchSites();
     }
 
     // ==============================================================
-    // 3. 工人出勤打卡与借款入账
+    // 3. 工人出勤打卡与月结计算
     // ==============================================================
     async function fetchAttendance() {
         try {
@@ -1011,14 +1137,14 @@
     async function handleAttendanceSubmit(e) {
         e.preventDefault();
         const checkedBoxes = Array.from(document.querySelectorAll('input[name="selectedWorker"]:checked'));
-        if (checkedBoxes.length === 0) return alert('请勾选出勤工人！');
+        if (checkedBoxes.length === 0) return alert('请先勾选出勤工人！');
 
         const work_date = document.getElementById('attWorkDate').value;
         const site_name = document.getElementById('attSiteName').value;
         const mode = document.getElementById('attRecordMode').value;
         const note = document.getElementById('attNote').value.trim();
 
-        let total_hours = 0;
+        let total_hours = 8;
         let check_in = `${work_date}T08:00:00`;
         let check_out = `${work_date}T17:00:00`;
 
@@ -1030,7 +1156,7 @@
 
             const diffMs = new Date(check_out) - new Date(check_in);
             let diffHours = diffMs / (1000 * 60 * 60);
-            if (diffHours >= 8) diffHours -= 1; // 扣除午饭1小时
+            if (diffHours >= 8) diffHours -= 1;
             total_hours = diffHours > 0 ? +diffHours.toFixed(2) : 0;
         } else {
             total_hours = parseFloat(document.getElementById('attDirectHours').value);
@@ -1106,13 +1232,15 @@
         alert('借款/代扣已成功登记！');
     }
 
-    // 月结看板
+    // 月结看板 (自动过滤当月无工时员工)
     function renderWorkerMonthlySummary() {
         const month = document.getElementById('filterMonth').value;
         const tbody = document.getElementById('workerMonthlyBody');
         const cards = document.getElementById('workerMonthlyCards');
         tbody.innerHTML = '';
         cards.innerHTML = '';
+
+        let displayedCount = 0;
 
         workersList.forEach(w => {
             let totalHours = 0;
@@ -1123,6 +1251,10 @@
                     grossPay += Number(att.daily_wage || 0);
                 }
             });
+
+            // 当月无工时则直接跳过不显示
+            if (totalHours <= 0 && grossPay <= 0) return;
+            displayedCount++;
 
             let totalDeductions = 0;
             advancesList.forEach(adv => {
@@ -1161,72 +1293,204 @@
                 </div>
             `;
         });
+
+        if (displayedCount === 0) {
+            tbody.innerHTML = '<tr><td colspan="7" class="p-6 text-center text-slate-400">所选月份暂无工人出勤记录</td></tr>';
+            cards.innerHTML = '<div class="p-4 text-center text-slate-400 text-xs">所选月份暂无工人出勤记录</div>';
+        }
     }
 
     // ==============================================================
-    // 4. 全量每日流水明细 (带工地、日期、工时、备注关联)
+    // 4. 明细表格 (带收缩分组、日期搜索与编辑修改)
     // ==============================================================
     function renderDailyDetailTable() {
         const workerIdFilter = document.getElementById('detailWorkerFilter').value;
         const siteFilter = document.getElementById('detailSiteFilter').value;
+        const searchDate = document.getElementById('detailSearchDate').value;
 
-        // 1. 出勤明细
-        const attBody = document.getElementById('dailyAttendanceDetailBody');
-        attBody.innerHTML = '';
+        // 1. 出勤明细按年月收缩分组
+        const attContainer = document.getElementById('dailyAttendanceGroupContainer');
+        attContainer.innerHTML = '';
+        
         const filteredAtt = attendanceList.filter(item => {
             if (workerIdFilter && item.worker_id !== parseInt(workerIdFilter)) return false;
             if (siteFilter && item.site_name !== siteFilter) return false;
+            if (searchDate && item.work_date !== searchDate) return false;
             return true;
         });
 
         if (filteredAtt.length === 0) {
-            attBody.innerHTML = '<tr><td colspan="7" class="p-4 text-center text-slate-400">暂无出勤记录</td></tr>';
+            attContainer.innerHTML = '<div class="p-4 text-center text-slate-400 text-xs bg-slate-50 rounded-xl">暂无出勤流水记录</div>';
         } else {
+            // 按年月分组 (YYYY-MM)
+            const groupedAtt = {};
             filteredAtt.forEach(att => {
-                const worker = workersList.find(w => w.id === att.worker_id) || {};
-                attBody.innerHTML += `
-                    <tr class="hover:bg-slate-50">
-                        <td class="p-2.5 font-mono text-slate-600">${att.work_date}</td>
-                        <td class="p-2.5 font-bold text-slate-900">${escapeHtml(worker.name || '未知工人')}</td>
-                        <td class="p-2.5"><span class="px-2 py-0.5 rounded font-semibold bg-slate-100 text-slate-700">📍 ${escapeHtml(att.site_name)}</span></td>
-                        <td class="p-2.5 font-bold font-mono text-indigo-700">${Number(att.total_hours).toFixed(1)} h</td>
-                        <td class="p-2.5 font-bold font-mono text-slate-800">RM ${Number(att.daily_wage).toFixed(2)}</td>
-                        <td class="p-2.5 text-slate-500">${escapeHtml(att.note || '-')}</td>
-                        <td class="p-2.5 text-right">
-                            <button onclick="deleteAttendanceRecord(${att.id})" class="text-rose-500 hover:underline">删除</button>
-                        </td>
-                    </tr>
+                const ym = (att.work_date || '').slice(0, 7) || '未知年月';
+                if (!groupedAtt[ym]) groupedAtt[ym] = [];
+                groupedAtt[ym].push(att);
+            });
+
+            Object.keys(groupedAtt).sort().reverse().forEach(ym => {
+                const records = groupedAtt[ym];
+                const details = document.createElement('details');
+                details.className = "border border-slate-200 rounded-xl bg-slate-50 overflow-hidden";
+                details.open = true; // 默认展开最近的
+
+                details.innerHTML = `
+                    <summary class="px-4 py-3 font-bold text-xs sm:text-sm bg-white cursor-pointer select-none flex justify-between items-center border-b">
+                        <span class="text-indigo-900">📅 ${ym} 出勤明细记录 (${records.length} 笔)</span>
+                        <span class="text-xs text-slate-400 font-normal">点击收起/展开</span>
+                    </summary>
+                    <div class="overflow-x-auto p-2">
+                        <table class="w-full text-left border-collapse text-xs sm:text-sm bg-white rounded-lg">
+                            <thead>
+                                <tr class="text-slate-500 font-semibold border-b bg-slate-50/50">
+                                    <th class="p-2.5">日期</th>
+                                    <th class="p-2.5">工人姓名</th>
+                                    <th class="p-2.5">施工工地</th>
+                                    <th class="p-2.5">工时 (h)</th>
+                                    <th class="p-2.5">当日算薪 (RM)</th>
+                                    <th class="p-2.5">现场备注</th>
+                                    <th class="p-2.5 text-right">操作</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-100" id="attTableGroup_${ym}"></tbody>
+                        </table>
+                    </div>
                 `;
+                attContainer.appendChild(details);
+
+                const tbodyGroup = document.getElementById(`attTableGroup_${ym}`);
+                records.forEach(att => {
+                    const worker = workersList.find(w => w.id === att.worker_id) || {};
+                    tbodyGroup.innerHTML += `
+                        <tr class="hover:bg-slate-50">
+                            <td class="p-2.5 font-mono text-slate-600">${att.work_date}</td>
+                            <td class="p-2.5 font-bold text-slate-900">${escapeHtml(worker.name || '未知工人')}</td>
+                            <td class="p-2.5"><span class="px-2 py-0.5 rounded font-semibold bg-slate-100 text-slate-700">📍 ${escapeHtml(att.site_name)}</span></td>
+                            <td class="p-2.5 font-bold font-mono text-indigo-700">${Number(att.total_hours).toFixed(1)} h</td>
+                            <td class="p-2.5 font-bold font-mono text-slate-800">RM ${Number(att.daily_wage).toFixed(2)}</td>
+                            <td class="p-2.5 text-slate-500">${escapeHtml(att.note || '-')}</td>
+                            <td class="p-2.5 text-right space-x-2">
+                                <button onclick="openEditAttendanceModal(${att.id})" class="text-indigo-600 hover:underline cursor-pointer">编辑</button>
+                                <button onclick="deleteAttendanceRecord(${att.id})" class="text-rose-500 hover:underline cursor-pointer">删除</button>
+                            </td>
+                        </tr>
+                    `;
+                });
             });
         }
 
-        // 2. 借款明细
-        const advBody = document.getElementById('dailyAdvanceDetailBody');
-        advBody.innerHTML = '';
+        // 2. 借款明细按年月收缩分组
+        const advContainer = document.getElementById('dailyAdvanceGroupContainer');
+        advContainer.innerHTML = '';
+
         const filteredAdv = advancesList.filter(item => {
             if (workerIdFilter && item.worker_id !== parseInt(workerIdFilter)) return false;
+            if (searchDate && item.advance_date !== searchDate) return false;
             return true;
         });
 
         if (filteredAdv.length === 0) {
-            advBody.innerHTML = '<tr><td colspan="6" class="p-4 text-center text-slate-400">暂无借款/扣款记录</td></tr>';
+            advContainer.innerHTML = '<div class="p-4 text-center text-slate-400 text-xs bg-slate-50 rounded-xl">暂无借款/扣款流水记录</div>';
         } else {
+            const groupedAdv = {};
             filteredAdv.forEach(adv => {
-                const worker = workersList.find(w => w.id === adv.worker_id) || {};
-                advBody.innerHTML += `
-                    <tr class="hover:bg-slate-50">
-                        <td class="p-2.5 font-mono text-slate-600">${adv.advance_date}</td>
-                        <td class="p-2.5 font-bold text-slate-900">${escapeHtml(worker.name || '未知工人')}</td>
-                        <td class="p-2.5"><span class="px-2 py-0.5 rounded font-semibold ${adv.advance_type === '借款' ? 'bg-amber-100 text-amber-800' : 'bg-rose-100 text-rose-800'}">${escapeHtml(adv.advance_type)}</span></td>
-                        <td class="p-2.5 font-black font-mono text-amber-700">RM ${Number(adv.amount).toFixed(2)}</td>
-                        <td class="p-2.5 text-slate-500">${escapeHtml(adv.note || '-')}</td>
-                        <td class="p-2.5 text-right">
-                            <button onclick="deleteAdvanceRecord(${adv.id})" class="text-rose-500 hover:underline">删除</button>
-                        </td>
-                    </tr>
+                const ym = (adv.advance_date || '').slice(0, 7) || '未知年月';
+                if (!groupedAdv[ym]) groupedAdv[ym] = [];
+                groupedAdv[ym].push(adv);
+            });
+
+            Object.keys(groupedAdv).sort().reverse().forEach(ym => {
+                const records = groupedAdv[ym];
+                const details = document.createElement('details');
+                details.className = "border border-amber-200 rounded-xl bg-amber-50/20 overflow-hidden";
+                details.open = true;
+
+                details.innerHTML = `
+                    <summary class="px-4 py-3 font-bold text-xs sm:text-sm bg-white cursor-pointer select-none flex justify-between items-center border-b">
+                        <span class="text-amber-900">💰 ${ym} 预支借款明细 (${records.length} 笔)</span>
+                        <span class="text-xs text-slate-400 font-normal">点击收起/展开</span>
+                    </summary>
+                    <div class="overflow-x-auto p-2">
+                        <table class="w-full text-left border-collapse text-xs sm:text-sm bg-white rounded-lg">
+                            <thead>
+                                <tr class="text-slate-600 font-semibold border-b bg-amber-50/30">
+                                    <th class="p-2.5">借支日期</th>
+                                    <th class="p-2.5">借款工人</th>
+                                    <th class="p-2.5">款项类型</th>
+                                    <th class="p-2.5 text-amber-700">金额 (RM)</th>
+                                    <th class="p-2.5">原因/备注</th>
+                                    <th class="p-2.5 text-right">操作</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-100" id="advTableGroup_${ym}"></tbody>
+                        </table>
+                    </div>
                 `;
+                advContainer.appendChild(details);
+
+                const tbodyGroup = document.getElementById(`advTableGroup_${ym}`);
+                records.forEach(adv => {
+                    const worker = workersList.find(w => w.id === adv.worker_id) || {};
+                    tbodyGroup.innerHTML += `
+                        <tr class="hover:bg-slate-50">
+                            <td class="p-2.5 font-mono text-slate-600">${adv.advance_date}</td>
+                            <td class="p-2.5 font-bold text-slate-900">${escapeHtml(worker.name || '未知工人')}</td>
+                            <td class="p-2.5"><span class="px-2 py-0.5 rounded font-semibold ${adv.advance_type === '借款' ? 'bg-amber-100 text-amber-800' : 'bg-rose-100 text-rose-800'}">${escapeHtml(adv.advance_type)}</span></td>
+                            <td class="p-2.5 font-black font-mono text-amber-700">RM ${Number(adv.amount).toFixed(2)}</td>
+                            <td class="p-2.5 text-slate-500">${escapeHtml(adv.note || '-')}</td>
+                            <td class="p-2.5 text-right">
+                                <button onclick="deleteAdvanceRecord(${adv.id})" class="text-rose-500 hover:underline cursor-pointer">删除</button>
+                            </td>
+                        </tr>
+                    `;
+                });
             });
         }
+    }
+
+    // 编辑考勤工时与备注弹窗逻辑
+    function openEditAttendanceModal(id) {
+        const att = attendanceList.find(item => item.id === id);
+        if (!att) return;
+        const worker = workersList.find(w => w.id === att.worker_id) || {};
+
+        document.getElementById('editAttId').value = att.id;
+        document.getElementById('editAttWorkerName').innerText = worker.name || '未知';
+        document.getElementById('editAttSiteName').innerText = att.site_name;
+        document.getElementById('editAttHours').value = att.total_hours;
+        document.getElementById('editAttNote').value = att.note || '';
+        document.getElementById('editAttendanceModal').classList.remove('hidden');
+    }
+
+    function closeEditAttendanceModal() {
+        document.getElementById('editAttendanceModal').classList.add('hidden');
+    }
+
+    async function submitEditAttendance() {
+        const id = document.getElementById('editAttId').value;
+        const total_hours = parseFloat(document.getElementById('editAttHours').value);
+        const note = document.getElementById('editAttNote').value.trim();
+
+        if (isNaN(total_hours) || total_hours <= 0) return alert("请输入有效的工时！");
+
+        const att = attendanceList.find(item => item.id == id);
+        const worker = workersList.find(w => w.id === att.worker_id) || { hourly_rate: 12.5 };
+        const hourlyRate = Number(worker.hourly_rate || 12.5);
+        const daily_wage = +(total_hours * hourlyRate).toFixed(2);
+
+        await fetch(`${SUPABASE_URL}/attendance_records?id=eq.${id}`, {
+            method: "PATCH",
+            headers: reqHeaders,
+            body: JSON.stringify({ total_hours, daily_wage, note })
+        });
+
+        closeEditAttendanceModal();
+        await fetchAttendance();
+        renderWorkerMonthlySummary();
+        renderDailyDetailTable();
+        alert("✅ 考勤工时已修改更新！");
     }
 
     async function deleteAttendanceRecord(id) {
@@ -1246,7 +1510,7 @@
     }
 
     // ==============================================================
-    // 5. Subcon 分包 (垫付人、Claimed 标记、合同修改)
+    // 5. Subcon 分包管理 (带签约日期)
     // ==============================================================
     async function fetchSubconData() {
         try {
@@ -1264,6 +1528,7 @@
 
     function renderSubconSelectors() {
         const select = document.getElementById('payContractSelect');
+        if(!select) return;
         select.innerHTML = '<option value="">-- 请选择分包工程 --</option>';
         subconContracts.forEach(c => {
             select.innerHTML += `<option value="${c.id}">${escapeHtml(c.project_name)} (${escapeHtml(c.subcon_name)})</option>`;
@@ -1272,6 +1537,7 @@
 
     async function handleNewSubconSubmit(e) {
         e.preventDefault();
+        const contract_date = document.getElementById('subContractDate').value;
         const project_name = document.getElementById('subProjectName').value.trim();
         const subcon_name = document.getElementById('subSubconName').value.trim();
         const base_amount = parseFloat(document.getElementById('subBaseAmount').value);
@@ -1279,7 +1545,7 @@
         await fetch(`${SUPABASE_URL}/subcon_contracts`, {
             method: "POST",
             headers: reqHeaders,
-            body: JSON.stringify([{ project_name, subcon_name, base_amount, vo_amount: 0 }])
+            body: JSON.stringify([{ contract_date, project_name, subcon_name, base_amount, vo_amount: 0 }])
         });
         document.getElementById('subProjectName').value = '';
         document.getElementById('subSubconName').value = '';
@@ -1315,6 +1581,7 @@
 
     function renderSubconDashboard() {
         const container = document.getElementById('subconCardsContainer');
+        if(!container) return;
         container.innerHTML = '';
 
         let privateSum = 0;
@@ -1358,7 +1625,6 @@
                     const isPrivate = p.paid_by === '私人先给';
                     const timeFormatted = p.payment_time.replace('T', ' ').slice(0, 16);
 
-                    // 报销状态
                     let claimHtml = '';
                     if (isPrivate) {
                         if (p.is_claimed) {
@@ -1383,7 +1649,7 @@
                             </div>
                             <div class="flex items-center gap-3 self-end sm:self-center">
                                 <span class="font-mono font-bold text-rose-600 text-sm">- RM ${Number(p.amount).toFixed(2)}</span>
-                                <button onclick="deleteSubconPayment(${p.id})" class="text-slate-300 hover:text-rose-500 text-xs">✕</button>
+                                <button onclick="deleteSubconPayment(${p.id})" class="text-slate-300 hover:text-rose-500 text-xs cursor-pointer">✕</button>
                             </div>
                         </div>
                     `;
@@ -1397,12 +1663,13 @@
                     <div>
                         <span class="text-base font-black text-slate-900">${escapeHtml(c.project_name)}</span>
                         <span class="text-xs font-bold text-indigo-600 ml-2">承包: ${escapeHtml(c.subcon_name)}</span>
+                        <div class="text-xs text-slate-400 mt-0.5">签约日期: ${c.contract_date || '未记录'}</div>
                     </div>
                     <div class="flex items-center gap-2">
-                        <button type="button" onclick="openEditSubconContractModal(${c.id})" class="px-3 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-lg">
+                        <button type="button" onclick="openEditSubconContractModal(${c.id})" class="px-3 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-lg cursor-pointer">
                             ✏️ 修改合同
                         </button>
-                        <button type="button" onclick="openVoModal(${c.id})" class="px-3 py-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs font-bold rounded-lg">
+                        <button type="button" onclick="openVoModal(${c.id})" class="px-3 py-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs font-bold rounded-lg cursor-pointer">
                             ➕ 加 VO
                         </button>
                     </div>
@@ -1426,11 +1693,11 @@
         document.getElementById('subconAllContractsTotal').innerText = contractAllSum.toFixed(2);
     }
 
-    // Subcon 修改弹窗
     function openEditSubconContractModal(id) {
         const c = subconContracts.find(item => item.id === id);
         if (!c) return;
         document.getElementById('editSubContractId').value = c.id;
+        document.getElementById('editSubContractDate').value = c.contract_date || '';
         document.getElementById('editSubProjectName').value = c.project_name;
         document.getElementById('editSubSubconName').value = c.subcon_name;
         document.getElementById('editSubBaseAmount').value = c.base_amount;
@@ -1443,6 +1710,7 @@
 
     async function submitEditSubconContract() {
         const id = document.getElementById('editSubContractId').value;
+        const contract_date = document.getElementById('editSubContractDate').value;
         const project_name = document.getElementById('editSubProjectName').value.trim();
         const subcon_name = document.getElementById('editSubSubconName').value.trim();
         const base_amount = parseFloat(document.getElementById('editSubBaseAmount').value);
@@ -1452,7 +1720,7 @@
         await fetch(`${SUPABASE_URL}/subcon_contracts?id=eq.${id}`, {
             method: "PATCH",
             headers: reqHeaders,
-            body: JSON.stringify({ project_name, subcon_name, base_amount })
+            body: JSON.stringify({ contract_date, project_name, subcon_name, base_amount })
         });
         closeEditSubconContractModal();
         await fetchSubconData();
@@ -1496,7 +1764,7 @@
     }
 
     // ==============================================================
-    // 6. Marco 现金收支备用金模块 (IN & OUT)
+    // 6. Marco 现金收支 (带公司/店铺名、收缩分组)
     // ==============================================================
     async function fetchPettyCash() {
         try {
@@ -1528,6 +1796,7 @@
     async function handlePettyCashSubmit(e) {
         e.preventDefault();
         const trans_type = document.getElementById('pettyTransType').value;
+        const shop_name = document.getElementById('pettyShopName').value.trim();
         const record_date = document.getElementById('pettyDate').value;
         const record_time = document.getElementById('pettyTime').value;
         const amount = parseFloat(document.getElementById('pettyAmount').value);
@@ -1535,14 +1804,15 @@
         const receipt_no = document.getElementById('pettyReceiptNo').value.trim();
         const description = document.getElementById('pettyDescription').value.trim();
 
-        if (isNaN(amount) || amount <= 0 || !description) return alert('请完整填写金额与原因！');
+        if (isNaN(amount) || amount <= 0 || !description || !shop_name) return alert('请完整填写公司/店铺名、金额与原因！');
 
         await fetch(`${SUPABASE_URL}/marco_petty_cash`, {
             method: "POST",
             headers: reqHeaders,
-            body: JSON.stringify([{ record_date, record_time, trans_type, amount, category, receipt_no, description, is_claimed: false, pv_number: '' }])
+            body: JSON.stringify([{ record_date, record_time, trans_type, shop_name, amount, category, receipt_no, description, is_claimed: false, pv_number: '' }])
         });
 
+        document.getElementById('pettyShopName').value = '';
         document.getElementById('pettyAmount').value = '';
         document.getElementById('pettyReceiptNo').value = '';
         document.getElementById('pettyDescription').value = '';
@@ -1553,8 +1823,9 @@
     }
 
     function renderPettyCashTable() {
-        const tbody = document.getElementById('pettyCashTableBody');
-        tbody.innerHTML = '';
+        const container = document.getElementById('pettyCashGroupContainer');
+        if(!container) return;
+        container.innerHTML = '';
 
         let outTotal = 0;
         let inTotal = 0;
@@ -1578,39 +1849,80 @@
         document.getElementById('pettyNetClaim').innerText = netClaim.toFixed(2);
 
         if (pettyCashList.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="8" class="p-6 text-center text-slate-400">暂无备用金记录</td></tr>';
+            container.innerHTML = '<div class="p-6 text-center text-slate-400 text-xs bg-slate-50 rounded-xl">暂无备用金记录</div>';
             return;
         }
 
+        // 按年月收缩分组 (YYYY-MM)
+        const groupedPetty = {};
         pettyCashList.forEach(item => {
-            const isOut = item.trans_type === 'OUT';
-            const typeBadge = isOut 
-                ? `<span class="px-2 py-0.5 rounded font-bold text-[11px] bg-rose-100 text-rose-800">🔴 垫付 OUT</span>` 
-                : `<span class="px-2 py-0.5 rounded font-bold text-[11px] bg-emerald-100 text-emerald-800">🟢 收现 IN</span>`;
+            const ym = (item.record_date || '').slice(0, 7) || '未知年月';
+            if (!groupedPetty[ym]) groupedPetty[ym] = [];
+            groupedPetty[ym].push(item);
+        });
 
-            let claimHtml = '';
-            if (item.is_claimed) {
-                claimHtml = `<span class="px-2 py-0.5 rounded text-[11px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-200">✅ Claimed (${escapeHtml(item.pv_number)})</span>`;
-            } else {
-                claimHtml = `<button onclick="openClaimModal('petty', ${item.id})" class="px-2.5 py-1 bg-amber-500 hover:bg-amber-600 text-white font-bold rounded-lg text-xs cursor-pointer">📌 书记 Claim</button>`;
-            }
+        Object.keys(groupedPetty).sort().reverse().forEach(ym => {
+            const records = groupedPetty[ym];
+            const details = document.createElement('details');
+            details.className = "border border-slate-200 rounded-xl bg-slate-50/50 overflow-hidden";
+            details.open = true;
 
-            tbody.innerHTML += `
-                <tr class="hover:bg-slate-50">
-                    <td class="p-2.5 font-mono text-slate-500 text-xs">${item.record_date} ${item.record_time}</td>
-                    <td class="p-2.5">${typeBadge}</td>
-                    <td class="p-2.5 font-semibold text-slate-700">${escapeHtml(item.category)}</td>
-                    <td class="p-2.5 font-bold text-slate-900">${escapeHtml(item.description)}</td>
-                    <td class="p-2.5 font-mono text-slate-500 text-xs">${item.receipt_no ? escapeHtml(item.receipt_no) : '-'}</td>
-                    <td class="p-2.5 font-black font-mono ${isOut ? 'text-rose-600' : 'text-emerald-700'} text-sm">
-                        ${isOut ? '-' : '+'} RM ${Number(item.amount).toFixed(2)}
-                    </td>
-                    <td class="p-2.5">${claimHtml}</td>
-                    <td class="p-2.5 text-right space-x-2">
-                        <button onclick="deletePettyCash(${item.id})" class="text-rose-500 hover:underline text-xs">删除</button>
-                    </td>
-                </tr>
+            details.innerHTML = `
+                <summary class="px-4 py-3 font-bold text-xs sm:text-sm bg-white cursor-pointer select-none flex justify-between items-center border-b">
+                    <span class="text-slate-900">💼 ${ym} 现金流水账本 (${records.length} 笔)</span>
+                    <span class="text-xs text-slate-400 font-normal">点击收起/展开</span>
+                </summary>
+                <div class="overflow-x-auto p-2">
+                    <table class="w-full text-left border-collapse text-xs sm:text-sm bg-white rounded-lg">
+                        <thead>
+                            <tr class="bg-slate-50 text-slate-500 font-semibold border-b">
+                                <th class="p-2.5">日期时间</th>
+                                <th class="p-2.5">类型</th>
+                                <th class="p-2.5">公司/店铺名</th>
+                                <th class="p-2.5">分类</th>
+                                <th class="p-2.5">内容原因</th>
+                                <th class="p-2.5">金额 (RM)</th>
+                                <th class="p-2.5">报销状态 (PV)</th>
+                                <th class="p-2.5 text-right">操作</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100" id="pettyTableGroup_${ym}"></tbody>
+                    </table>
+                </div>
             `;
+            container.appendChild(details);
+
+            const tbodyGroup = document.getElementById(`pettyTableGroup_${ym}`);
+            records.forEach(item => {
+                const isOut = item.trans_type === 'OUT';
+                const typeBadge = isOut 
+                    ? `<span class="px-2 py-0.5 rounded font-bold text-[11px] bg-rose-100 text-rose-800">🔴 垫付 OUT</span>` 
+                    : `<span class="px-2 py-0.5 rounded font-bold text-[11px] bg-emerald-100 text-emerald-800">🟢 收现 IN</span>`;
+
+                let claimHtml = '';
+                if (item.is_claimed) {
+                    claimHtml = `<span class="px-2 py-0.5 rounded text-[11px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-200">✅ Claimed (${escapeHtml(item.pv_number)})</span>`;
+                } else {
+                    claimHtml = `<button onclick="openClaimModal('petty', ${item.id})" class="px-2.5 py-1 bg-amber-500 hover:bg-amber-600 text-white font-bold rounded-lg text-xs cursor-pointer">📌 书记 Claim</button>`;
+                }
+
+                tbodyGroup.innerHTML += `
+                    <tr class="hover:bg-slate-50">
+                        <td class="p-2.5 font-mono text-slate-500 text-xs">${item.record_date} ${item.record_time}</td>
+                        <td class="p-2.5">${typeBadge}</td>
+                        <td class="p-2.5 font-bold text-indigo-900">${escapeHtml(item.shop_name || '-')}</td>
+                        <td class="p-2.5 font-semibold text-slate-700">${escapeHtml(item.category)}</td>
+                        <td class="p-2.5 text-slate-900">${escapeHtml(item.description)}</td>
+                        <td class="p-2.5 font-black font-mono ${isOut ? 'text-rose-600' : 'text-emerald-700'} text-sm">
+                            ${isOut ? '-' : '+'} RM ${Number(item.amount).toFixed(2)}
+                        </td>
+                        <td class="p-2.5">${claimHtml}</td>
+                        <td class="p-2.5 text-right">
+                            <button onclick="deletePettyCash(${item.id})" class="text-rose-500 hover:underline text-xs cursor-pointer">删除</button>
+                        </td>
+                    </tr>
+                `;
+            });
         });
     }
 
@@ -1622,7 +1934,61 @@
     }
 
     // ==============================================================
-    // 7. 通用 Claim 弹窗与 PV Number 绑定
+    // 7. 工地综合搜索功能 (搜工地、列员工工作记录、算总工钱)
+    // ==============================================================
+    function populateSiteSearchDropdown() {
+        const select = document.getElementById('searchSiteSelect');
+        if(!select) return;
+        select.innerHTML = '<option value="">-- 请选择或切换要查询的工地 --</option>';
+        sitesList.forEach(s => {
+            select.innerHTML += `<option value="${escapeHtml(s.site_name)}">${escapeHtml(s.site_name)}</option>`;
+        });
+    }
+
+    function executeSiteSearch() {
+        const siteName = document.getElementById('searchSiteSelect').value;
+        if (!siteName) return alert("请先选择要搜索的工地名称！");
+
+        const matchedAtt = attendanceList.filter(att => att.site_name === siteName);
+        
+        let totalWage = 0;
+        let totalHours = 0;
+
+        matchedAtt.forEach(att => {
+            totalWage += Number(att.daily_wage || 0);
+            totalHours += Number(att.total_hours || 0);
+        });
+
+        document.getElementById('statSiteTotalWage').innerText = totalWage.toFixed(2);
+        document.getElementById('statSiteTotalHours').innerText = totalHours.toFixed(1);
+        document.getElementById('statSiteRecordCount').innerText = matchedAtt.length;
+        document.getElementById('siteSearchStats').classList.remove('hidden');
+
+        const tbody = document.getElementById('siteSearchTableBody');
+        tbody.innerHTML = '';
+
+        if (matchedAtt.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="6" class="p-6 text-center text-slate-400">该工地 [${escapeHtml(siteName)}] 暂无出勤工作记录</td></tr>`;
+            return;
+        }
+
+        matchedAtt.forEach(att => {
+            const worker = workersList.find(w => w.id === att.worker_id) || {};
+            tbody.innerHTML += `
+                <tr class="hover:bg-slate-50">
+                    <td class="p-2.5 font-mono text-slate-600">${att.work_date}</td>
+                    <td class="p-2.5 font-bold text-slate-900">${escapeHtml(worker.name || '未知工人')}</td>
+                    <td class="p-2.5"><span class="px-2 py-0.5 rounded font-bold bg-indigo-50 text-indigo-700 text-xs">${escapeHtml(worker.worker_type || '中工')}</span></td>
+                    <td class="p-2.5 font-bold font-mono text-indigo-700">${Number(att.total_hours).toFixed(1)} h</td>
+                    <td class="p-2.5 font-bold font-mono text-slate-800">RM ${Number(att.daily_wage).toFixed(2)}</td>
+                    <td class="p-2.5 text-slate-500">${escapeHtml(att.note || '-')}</td>
+                </tr>
+            `;
+        });
+    }
+
+    // ==============================================================
+    // 8. 通用 Claim 弹窗与辅助函数
     // ==============================================================
     function openClaimModal(targetType, id) {
         document.getElementById('claimTargetType').value = targetType;
