@@ -680,7 +680,7 @@
         }
     }
 
-    // 第一优先级：立刻执行日期与输入框初始化
+    // 填充日期函数
     function initSystemDates() {
         const now = new Date();
         const y = now.getFullYear();
@@ -707,14 +707,12 @@
         setVal('pettyTime', `${h}:${min}`);
     }
 
-    // 无论任何情况，立即先执行日期设置与模式检查
-    initSystemDates();
-
-    window.onload = function() {
+    // 统一在 DOM 就绪后按顺序执行，避免在元素尚未生成前触发空对象崩溃
+    document.addEventListener('DOMContentLoaded', () => {
         initSystemDates();
         applyAdminState();
         refreshAll();
-    };
+    });
 
     async function refreshAll() {
         const badge = document.getElementById('connStatusBadge');
