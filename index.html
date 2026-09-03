@@ -26,10 +26,14 @@
                 <button type="button" onclick="refreshAll()" class="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs sm:text-sm font-semibold rounded-xl transition cursor-pointer">
                     🔄 刷新同步
                 </button>
+                <!-- 管理模式解锁按钮 -->
+                <button type="button" onclick="toggleManagementMode()" id="mgmtUnlockBtn" class="px-3.5 py-2 bg-slate-900 hover:bg-black text-white text-xs sm:text-sm font-bold rounded-xl transition cursor-pointer">
+                    🔒 管理模式 (未解锁)
+                </button>
             </div>
         </div>
 
-        <!-- 导航标签页 (Subcon 与 Marco 默认直接显示) -->
+        <!-- 导航标签页 -->
         <div class="flex border-b border-slate-200 gap-1 sm:gap-2 overflow-x-auto pb-1">
             <button id="navWorkersBtn" type="button" onclick="switchMainTab('workers')"
                 class="px-3 sm:px-4 py-2.5 text-xs sm:text-sm font-bold border-b-2 border-indigo-600 text-indigo-600 transition flex items-center gap-1.5 whitespace-nowrap cursor-pointer">
@@ -39,12 +43,13 @@
                 class="px-3 sm:px-4 py-2.5 text-xs sm:text-sm font-bold border-b-2 border-transparent text-slate-500 hover:text-indigo-600 transition flex items-center gap-1.5 whitespace-nowrap cursor-pointer">
                 📋 工人打卡/借款流水明细
             </button>
+            <!-- 默认隐藏的敏感模块标签 -->
             <button id="navSubconBtn" type="button" onclick="switchMainTab('subcon')"
-                class="px-3 sm:px-4 py-2.5 text-xs sm:text-sm font-bold border-b-2 border-transparent text-slate-500 hover:text-indigo-600 transition flex items-center gap-1.5 whitespace-nowrap cursor-pointer">
+                class="px-3 sm:px-4 py-2.5 text-xs sm:text-sm font-bold border-b-2 border-transparent text-slate-500 hover:text-indigo-600 transition items-center gap-1.5 whitespace-nowrap cursor-pointer hidden">
                 📑 Subcon 分包与垫付
             </button>
             <button id="navPettyCashBtn" type="button" onclick="switchMainTab('pettyCash')"
-                class="px-3 sm:px-4 py-2.5 text-xs sm:text-sm font-bold border-b-2 border-transparent text-slate-500 hover:text-indigo-600 transition flex items-center gap-1.5 whitespace-nowrap cursor-pointer">
+                class="px-3 sm:px-4 py-2.5 text-xs sm:text-sm font-bold border-b-2 border-transparent text-slate-500 hover:text-indigo-600 transition items-center gap-1.5 whitespace-nowrap cursor-pointer hidden">
                 💼 Marco 现金收支与Claim
             </button>
             <button id="navSiteSearchBtn" type="button" onclick="switchMainTab('siteSearch')"
@@ -257,7 +262,7 @@
     </div>
 
     <!-- ============================================================== -->
-    <!-- SECTION 3: Subcon 分包与垫付管理 (常驻显示)                      -->
+    <!-- SECTION 3: Subcon 分包与垫付管理 (默认隐藏，需密码解锁)          -->
     <!-- ============================================================== -->
     <div id="tabSubcon" class="space-y-4 sm:space-y-6 hidden">
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -369,7 +374,7 @@
     </div>
 
     <!-- ============================================================== -->
-    <!-- SECTION 4: Marco 现金收支与 Claim 模块 (常驻显示)                -->
+    <!-- SECTION 4: Marco 现金收支与 Claim 模块 (默认隐藏，需密码解锁)    -->
     <!-- ============================================================== -->
     <div id="tabPettyCash" class="space-y-4 sm:space-y-6 hidden">
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -738,6 +743,9 @@
     let subconVos = [];
     let pettyCashList = [];
 
+    // 管理模式解锁状态
+    let isManagementUnlocked = false;
+
     function initSystemDates() {
         const now = new Date();
         const y = now.getFullYear();
@@ -780,7 +788,38 @@
         populateSiteSearchDropdown();
     }
 
+    // 管理模式解锁逻辑（密码2321）
+    function toggleManagementMode() {
+        if (isManagementUnlocked) {
+            isManagementUnlocked = false;
+            document.getElementById('mgmtUnlockBtn').innerText = "🔒 管理模式 (未解锁)";
+            document.getElementById('mgmtUnlockBtn').className = "px-3.5 py-2 bg-slate-900 hover:bg-black text-white text-xs sm:text-sm font-bold rounded-xl transition cursor-pointer";
+            document.getElementById('navSubconBtn').classList.add('hidden');
+            document.getElementById('navPettyCashBtn').classList.add('hidden');
+            alert("已退出管理模式，Subcon 与 Marco 模块已重新隐藏。");
+            switchMainTab('workers');
+        } else {
+            const pwd = prompt("请输入管理密码：");
+            if (pwd === "2321") {
+                isManagementUnlocked = true;
+                document.getElementById('mgmtUnlockBtn').innerText = "🔓 管理模式 (已解锁)";
+                document.getElementById('mgmtUnlockBtn').className = "px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs sm:text-sm font-bold rounded-xl transition cursor-pointer";
+                document.getElementById('navSubconBtn').classList.remove('hidden');
+                document.getElementById('navPettyCashBtn').classList.remove('hidden');
+                alert("✅ 密码正确！Subcon 分包与 Marco 现金模块已解锁显示。");
+            } else if (pwd !== null) {
+                alert("❌ 密码错误！");
+            }
+        }
+    }
+
     function switchMainTab(tab) {
+        // 如果点击的是受保护模块但未解锁，给出提示
+        if ((tab === 'subcon' || tab === 'pettyCash') && !isManagementUnlocked) {
+            alert("🔒 此模块受密码保护，请先点击右上角“管理模式”输入密码解锁！");
+            return;
+        }
+
         ['Workers', 'DailyDetail', 'Subcon', 'PettyCash', 'SiteSearch', 'Manage'].forEach(t => {
             const btn = document.getElementById(`nav${t}Btn`);
             const panel = document.getElementById(`tab${t}`);
@@ -1466,7 +1505,7 @@
         renderDailyDetailTable();
     }
 
-    // 5. Subcon 分包管理 (带删除合同功能)
+    // 5. Subcon 分包管理
     async function fetchSubconData() {
         try {
             const [cRes, pRes, vRes] = await Promise.all([
