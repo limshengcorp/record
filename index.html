@@ -24,10 +24,7 @@
                 <p class="text-[11px] sm:text-xs text-slate-500 mt-0.5">现场劳务核算 · 工人出勤流水 · 现金与分包管理</p>
             </div>
             <div class="flex items-center gap-1.5 sm:gap-2">
-                <button type="button" id="adminToggleBtn" onclick="toggleAdminLock()" class="px-2.5 sm:px-3.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 text-xs font-bold rounded-xl transition cursor-pointer">
-                    ⚙️ 管理模式
-                </button>
-                <button type="button" onclick="refreshAll(true)" class="px-2.5 sm:px-3.5 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-xl transition cursor-pointer shadow-sm">
+                <button type="button" onclick="refreshAll(true)" class="px-3.5 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs sm:text-sm font-bold rounded-xl transition cursor-pointer shadow-sm">
                     🔄 刷新同步
                 </button>
             </div>
@@ -36,7 +33,7 @@
         <!-- 错误提示条 -->
         <div id="globalErrorBox" class="hidden p-2.5 bg-rose-50 border border-rose-200 rounded-xl text-xs text-rose-700 font-semibold"></div>
 
-        <!-- 导航标签栏 -->
+        <!-- 导航标签栏 (全部直接开放，无需密码) -->
         <div class="flex border-b border-slate-200 gap-1 overflow-x-auto pb-1 text-xs sm:text-sm font-bold">
             <button id="navWorkersBtn" type="button" onclick="switchMainTab('workers')"
                 class="px-3 py-2 border-b-2 border-indigo-600 text-indigo-600 transition whitespace-nowrap cursor-pointer">
@@ -46,17 +43,17 @@
                 class="px-3 py-2 border-b-2 border-transparent text-slate-500 hover:text-indigo-600 transition whitespace-nowrap cursor-pointer">
                 📋 工人打卡明细
             </button>
-            <button id="navManageBtn" type="button" onclick="switchMainTab('manage')"
-                class="px-3 py-2 border-b-2 border-transparent text-slate-500 hover:text-indigo-600 transition whitespace-nowrap cursor-pointer">
-                ⚙️ 名录管理
-            </button>
             <button id="navSubconBtn" type="button" onclick="switchMainTab('subcon')"
-                class="hidden px-3 py-2 border-b-2 border-transparent text-slate-500 hover:text-indigo-600 transition whitespace-nowrap cursor-pointer">
+                class="px-3 py-2 border-b-2 border-transparent text-slate-500 hover:text-indigo-600 transition whitespace-nowrap cursor-pointer">
                 📑 Subcon分包
             </button>
             <button id="navPettyCashBtn" type="button" onclick="switchMainTab('pettyCash')"
-                class="hidden px-3 py-2 border-b-2 border-transparent text-slate-500 hover:text-indigo-600 transition whitespace-nowrap cursor-pointer">
+                class="px-3 py-2 border-b-2 border-transparent text-slate-500 hover:text-indigo-600 transition whitespace-nowrap cursor-pointer">
                 💼 Marco现金
+            </button>
+            <button id="navManageBtn" type="button" onclick="switchMainTab('manage')"
+                class="px-3 py-2 border-b-2 border-transparent text-slate-500 hover:text-indigo-600 transition whitespace-nowrap cursor-pointer">
+                ⚙️ 名录管理
             </button>
         </div>
     </div>
@@ -278,7 +275,7 @@
     </div>
 
     <!-- ============================================================== -->
-    <!-- SECTION 3: Subcon 分包 (管理模式展示)                          -->
+    <!-- SECTION 3: Subcon 分包                                         -->
     <!-- ============================================================== -->
     <div id="tabSubcon" class="space-y-4 hidden">
         <div class="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
@@ -561,7 +558,7 @@
     </div>
 </div>
 
-<!-- 弹窗 2: 编辑工人资料 -->
+<!-- 弹窗 2: 编辑工人资料 (安全锁) -->
 <div id="editWorkerModal" class="hidden fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-3">
     <div class="bg-white rounded-2xl shadow-xl max-w-md w-full p-4 space-y-3">
         <h3 class="text-sm font-bold text-slate-900 border-b pb-2">✏️ 修改工人档案</h3>
@@ -636,7 +633,6 @@
 </div>
 
 <script>
-    // 基础配置
     const SUPABASE_URL = "https://xiplmlalurpnrnzeaywp.supabase.co/rest/v1";[cite: 1, 2]
     const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhpcGxtbGFsdXJwbnJuemVheXdwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg0Mjk2NjYsImV4cCI6MjEwNDAwNTY2Nn0.uIRTO0MAvQHGzQzdWwWZCufeMsnuU9LQTHUOI60lTXQ";[cite: 1, 2]
 
@@ -656,9 +652,7 @@
     let subconVos = [];[cite: 1, 2]
     let pettyCashList = [];[cite: 2]
 
-    let isAdminUnlocked = localStorage.getItem('limsheng_admin_unlocked') === 'true';[cite: 2]
-
-    // 核心请求：6秒超时保护
+    // 严谨请求函数：捕获错误并在界面展示具体原因
     async function safeFetch(path) {
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 6000);
@@ -672,13 +666,13 @@
 
             if (!res.ok) {
                 const text = await res.text();
-                showGlobalError(`[数据库请求受阻 ${res.status}] ${path} - ${text}`);[cite: 2]
+                showGlobalError(`[接口错误 ${res.status}] ${path} - ${text}`);[cite: 2]
                 return [];
             }
             return await res.json();
         } catch (e) {
             clearTimeout(timeoutId);
-            showGlobalError(`网络异常: ${e.message}`);
+            showGlobalError(`网络异常无法连接数据库: ${e.message}`);[cite: 2]
             return [];
         }
     }
@@ -691,7 +685,7 @@
         }
     }
 
-    // 填充日期
+    // 填充日期函数
     function initSystemDates() {
         const now = new Date();
         const y = now.getFullYear();
@@ -718,10 +712,9 @@
         setVal('pettyTime', `${h}:${min}`);[cite: 2]
     }
 
-    // 页面加载立刻激活
-    window.addEventListener('DOMContentLoaded', () => {
+    // 页面全部载入后安全启动
+    window.addEventListener('load', () => {
         initSystemDates();
-        applyAdminState();
         refreshAll(false);
     });
 
@@ -759,56 +752,12 @@
         }
     }
 
-    function toggleAdminLock() {
-        if (isAdminUnlocked) {
-            if (confirm("确定退出管理模式并隐藏敏感账目？")) {
-                isAdminUnlocked = false;
-                localStorage.removeItem('limsheng_admin_unlocked');
-                applyAdminState();
-            }
-        } else {
-            const pwd = prompt("请输入管理密码：");
-            if (pwd === "8888") {
-                isAdminUnlocked = true;
-                localStorage.setItem('limsheng_admin_unlocked', 'true');
-                applyAdminState();
-                alert("🔓 已解锁管理模式！");
-            } else if (pwd !== null) {
-                alert("❌ 密码错误！");
-            }
-        }
-    }
-
-    function applyAdminState() {
-        const subconNav = document.getElementById('navSubconBtn');
-        const pettyNav = document.getElementById('navPettyCashBtn');
-        const btn = document.getElementById('adminToggleBtn');
-
-        if (isAdminUnlocked) {
-            if (subconNav) subconNav.classList.remove('hidden');
-            if (pettyNav) pettyNav.classList.remove('hidden');
-            if (btn) {
-                btn.innerText = "🔒 退出管理";
-                btn.className = "px-2.5 sm:px-3.5 py-1.5 bg-slate-800 text-white text-xs font-bold rounded-xl transition cursor-pointer";
-            }
-        } else {
-            if (subconNav) subconNav.classList.add('hidden');
-            if (pettyNav) pettyNav.classList.add('hidden');
-            if (btn) {
-                btn.innerText = "⚙️ 管理模式";
-                btn.className = "px-2.5 sm:px-3.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 text-xs font-bold rounded-xl transition cursor-pointer";
-            }
-            const curActive = document.querySelector('.border-indigo-600');
-            if (curActive && (curActive.id === 'navSubconBtn' || curActive.id === 'navPettyCashBtn')) {
-                switchMainTab('workers');
-            }
-        }
-    }
-
+    // 切换主要标签
     function switchMainTab(tab) {
-        ['Workers', 'DailyDetail', 'Subcon', 'PettyCash', 'Manage'].forEach(t => {
-            const btn = document.getElementById(`nav${t}Btn`);
-            const panel = document.getElementById(`tab${t}`);
+        const tabs = ['workers', 'dailyDetail', 'subcon', 'pettyCash', 'manage'];
+        tabs.forEach(t => {
+            const btn = document.getElementById(`nav${t.charAt(0).toUpperCase() + t.slice(1)}Btn`);
+            const panel = document.getElementById(`tab${t.charAt(0).toUpperCase() + t.slice(1)}`);
             if (t.toLowerCase() === tab.toLowerCase()) {
                 if (panel) panel.classList.remove('hidden');
                 if (btn) btn.className = "px-3 py-2 border-b-2 border-indigo-600 text-indigo-600 transition whitespace-nowrap cursor-pointer";
@@ -854,10 +803,9 @@
     }
 
     // ==============================================================
-    // 1. 工人与工地管理 (去除 status 限制，确保旧数据 100% 显现)
+    // 1. 工人与工地管理 (全量载入，不再受 status 过滤影响)
     // ==============================================================
     async function fetchWorkers() {
-        // 直接读取 workers 表全部记录，解决 status 缺失导致不显示的问题
         const data = await safeFetch(`workers?order=name.asc`);
         workersList = data.filter(w => w.status !== 'inactive');
         renderWorkerSelectors();
@@ -1028,35 +976,32 @@
                     <div class="text-[11px] text-slate-400 font-mono mt-0.5">日薪: RM ${Number(w.daily_rate).toFixed(0)} (RM ${Number(w.hourly_rate).toFixed(2)}/h) ｜ IC: ${escapeHtml(w.ic_passport)}</div>
                 </div>
                 <div class="flex items-center gap-1.5 shrink-0">
-                    <button onclick="requestSecureAction('edit', ${w.id})" class="px-2 py-1 bg-white border border-slate-200 rounded-lg text-indigo-600 font-semibold hover:bg-indigo-50 cursor-pointer">编辑</button>
-                    <button onclick="requestSecureAction('archive', ${w.id})" class="px-2 py-1 bg-white border border-slate-200 rounded-lg text-rose-500 font-semibold hover:bg-rose-50 cursor-pointer">注销</button>
+                    <button onclick="openEditWorkerModalDirect(${w.id})" class="px-2 py-1 bg-white border border-slate-200 rounded-lg text-indigo-600 font-semibold hover:bg-indigo-50 cursor-pointer">编辑</button>
+                    <button onclick="archiveWorkerDirect(${w.id})" class="px-2 py-1 bg-white border border-slate-200 rounded-lg text-rose-500 font-semibold hover:bg-rose-50 cursor-pointer">注销</button>
                 </div>
-            `;[cite: 2]
+            `;
             container.appendChild(card);[cite: 2]
         });
     }
 
-    function requestSecureAction(action, id) {
-        const pwd = prompt("管理操作（安全锁）：请输入密码验证");[cite: 2]
-        if (pwd !== "2321") return alert("❌ 密码错误！");[cite: 2]
+    function openEditWorkerModalDirect(id) {
+        const w = workersList.find(item => item.id === id);[cite: 2]
+        if (!w) return;[cite: 2]
+        document.getElementById('editWorkerId').value = w.id;[cite: 2]
+        document.getElementById('editWorkerName').value = w.name;[cite: 2]
+        document.getElementById('editWorkerType').value = w.worker_type || '中工';[cite: 2]
+        document.getElementById('editWorkerIc').value = w.ic_passport;[cite: 2]
+        document.getElementById('editWorkerRate').value = w.daily_rate;[cite: 2]
+        document.getElementById('editWorkerModal').classList.remove('hidden');[cite: 2]
+    }
 
-        if (action === 'edit') {
-            const w = workersList.find(item => item.id === id);[cite: 2]
-            if (!w) return;[cite: 2]
-            document.getElementById('editWorkerId').value = w.id;[cite: 2]
-            document.getElementById('editWorkerName').value = w.name;[cite: 2]
-            document.getElementById('editWorkerType').value = w.worker_type || '中工';[cite: 2]
-            document.getElementById('editWorkerIc').value = w.ic_passport;[cite: 2]
-            document.getElementById('editWorkerRate').value = w.daily_rate;[cite: 2]
-            document.getElementById('editWorkerModal').classList.remove('hidden');[cite: 2]
-        } else if (action === 'archive') {
-            if (!confirm('确定将该工人注销？历史出勤和借款账单将完整保留。')) return;[cite: 2]
-            fetch(`${SUPABASE_URL}/workers?id=eq.${id}`, {
-                method: "PATCH",
-                headers: reqHeaders,
-                body: JSON.stringify({ status: 'inactive' })
-            }).then(() => fetchWorkers());[cite: 2]
-        }
+    function archiveWorkerDirect(id) {
+        if (!confirm('确定注销该工人？历史出勤和借款账单将完整保留。')) return;
+        fetch(`${SUPABASE_URL}/workers?id=eq.${id}`, {
+            method: "PATCH",
+            headers: reqHeaders,
+            body: JSON.stringify({ status: 'inactive' })
+        }).then(() => fetchWorkers());[cite: 2]
     }
 
     function closeEditWorkerModal() {
@@ -1880,7 +1825,7 @@
     function escapeHtml(text) {
         return (text || '').replace(/[&<>"']/g, m => ({
             '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
-        }[m]));
+        }[m]));[cite: 1, 2]
     }
 </script>
 
