@@ -19,7 +19,7 @@
             <div>
                 <h1 class="text-lg sm:text-2xl font-black tracking-tight text-slate-900 flex items-center gap-2">
                     🏗️ LIM SHENG CONSTRUCTION
-                    <span id="connStatusBadge" class="text-xs px-2 py-0.5 rounded-full font-bold bg-amber-100 text-amber-700">准备就绪</span>
+                    <span id="connStatusBadge" class="text-xs px-2 py-0.5 rounded-full font-bold bg-amber-100 text-amber-700">正在连接云端...</span>
                 </h1>
                 <p class="text-[11px] sm:text-xs text-slate-500 mt-0.5">现场劳务核算 · 工人出勤流水 · 现金与分包管理</p>
             </div>
@@ -27,7 +27,7 @@
                 <button type="button" id="adminToggleBtn" onclick="toggleAdminLock()" class="px-2.5 sm:px-3.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 text-xs font-bold rounded-xl transition cursor-pointer">
                     ⚙️ 管理模式
                 </button>
-                <button type="button" onclick="refreshAll()" class="px-2.5 sm:px-3.5 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-xl transition cursor-pointer shadow-sm">
+                <button type="button" onclick="refreshAll(true)" class="px-2.5 sm:px-3.5 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-xl transition cursor-pointer shadow-sm">
                     🔄 刷新同步
                 </button>
             </div>
@@ -86,7 +86,7 @@
                         </div>
                     </div>
                     <div id="workerCheckboxList" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-1.5 max-h-48 overflow-y-auto p-1 bg-white rounded-lg border border-slate-200">
-                        <div class="text-xs text-slate-400 col-span-full py-3 text-center">暂无工人，请先在名录录入</div>
+                        <div class="text-xs text-slate-400 col-span-full py-3 text-center">读取中...</div>
                     </div>
                 </div>
 
@@ -235,6 +235,7 @@
                 </div>
             </div>
 
+            <!-- 工地搜索与日期筛选 -->
             <div class="bg-indigo-50/60 p-3 rounded-xl border border-indigo-100 space-y-2">
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                     <div>
@@ -635,28 +636,29 @@
 </div>
 
 <script>
-    const SUPABASE_URL = "https://xiplmlalurpnrnzeaywp.supabase.co/rest/v1";[cite: 1]
-    const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhpcGxtbGFsdXJwbnJuemVheXdwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg0Mjk2NjYsImV4cCI6MjEwNDAwNTY2Nn0.uIRTO0MAvQHGzQzdWwWZCufeMsnuU9LQTHUOI60lTXQ";[cite: 1]
+    // 基础配置
+    const SUPABASE_URL = "https://xiplmlalurpnrnzeaywp.supabase.co/rest/v1";[cite: 1, 2]
+    const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhpcGxtbGFsdXJwbnJuemVheXdwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg0Mjk2NjYsImV4cCI6MjEwNDAwNTY2Nn0.uIRTO0MAvQHGzQzdWwWZCufeMsnuU9LQTHUOI60lTXQ";[cite: 1, 2]
 
     const reqHeaders = {
-        "apikey": SUPABASE_KEY,[cite: 1]
-        "Authorization": "Bearer " + SUPABASE_KEY,[cite: 1]
-        "Content-Type": "application/json",[cite: 1]
-        "Prefer": "return=representation"[cite: 1]
+        "apikey": SUPABASE_KEY,[cite: 1, 2]
+        "Authorization": "Bearer " + SUPABASE_KEY,[cite: 1, 2]
+        "Content-Type": "application/json",[cite: 1, 2]
+        "Prefer": "return=representation"[cite: 1, 2]
     };
 
-    let workersList = [];[cite: 1]
-    let sitesList = [];[cite: 1]
-    let attendanceList = [];[cite: 1]
-    let advancesList = [];[cite: 1]
-    let subconContracts = [];[cite: 1]
-    let subconPayments = [];[cite: 1]
-    let subconVos = [];[cite: 1]
-    let pettyCashList = [];
+    let workersList = [];[cite: 1, 2]
+    let sitesList = [];[cite: 1, 2]
+    let attendanceList = [];[cite: 1, 2]
+    let advancesList = [];[cite: 1, 2]
+    let subconContracts = [];[cite: 1, 2]
+    let subconPayments = [];[cite: 1, 2]
+    let subconVos = [];[cite: 1, 2]
+    let pettyCashList = [];[cite: 2]
 
-    let isAdminUnlocked = localStorage.getItem('limsheng_admin_unlocked') === 'true';
+    let isAdminUnlocked = localStorage.getItem('limsheng_admin_unlocked') === 'true';[cite: 2]
 
-    // 强隔离网络请求：带 6 秒超时中断，绝不无限挂死页面
+    // 核心请求：6秒超时保护
     async function safeFetch(path) {
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 6000);
@@ -670,30 +672,26 @@
 
             if (!res.ok) {
                 const text = await res.text();
-                showGlobalError(`[数据库反馈异常 ${res.status}] 请检查 ${path}: ${text}`);
+                showGlobalError(`[数据库请求受阻 ${res.status}] ${path} - ${text}`);[cite: 2]
                 return [];
             }
             return await res.json();
         } catch (e) {
             clearTimeout(timeoutId);
-            if (e.name === 'AbortError') {
-                showGlobalError(`连接超时：网络较慢，正在使用离线模式`);
-            } else {
-                showGlobalError(`无法连接数据库：${e.message}`);
-            }
+            showGlobalError(`网络异常: ${e.message}`);
             return [];
         }
     }
 
     function showGlobalError(msg) {
-        const box = document.getElementById('globalErrorBox');
+        const box = document.getElementById('globalErrorBox');[cite: 2]
         if (box) {
-            box.innerText = msg;
-            box.classList.remove('hidden');
+            box.innerText = msg;[cite: 2]
+            box.classList.remove('hidden');[cite: 2]
         }
     }
 
-    // 填充日期函数
+    // 填充日期
     function initSystemDates() {
         const now = new Date();
         const y = now.getFullYear();
@@ -706,33 +704,36 @@
             if (el) el.value = val;
         };
 
-        setVal('attWorkDate', todayStr);
-        setVal('advDate', todayStr);
-        setVal('subContractDate', todayStr);
-        setVal('pettyDate', todayStr);
+        setVal('attWorkDate', todayStr);[cite: 2]
+        setVal('advDate', todayStr);[cite: 2]
+        setVal('subContractDate', todayStr);[cite: 2]
+        setVal('pettyDate', todayStr);[cite: 2]
 
-        setVal('filterYearSelect', String(y));
-        setVal('filterMonthSelect', m);
+        setVal('filterYearSelect', String(y));[cite: 2]
+        setVal('filterMonthSelect', m);[cite: 2]
 
         const h = String(now.getHours()).padStart(2, '0');
         const min = String(now.getMinutes()).padStart(2, '0');
-        setVal('payDateTime', `${todayStr}T${h}:${min}`);
-        setVal('pettyTime', `${h}:${min}`);
+        setVal('payDateTime', `${todayStr}T${h}:${min}`);[cite: 2]
+        setVal('pettyTime', `${h}:${min}`);[cite: 2]
     }
 
-    // 保证在 DOM 构建完毕的第一时间全部解锁
-    document.addEventListener('DOMContentLoaded', () => {
+    // 页面加载立刻激活
+    window.addEventListener('DOMContentLoaded', () => {
         initSystemDates();
         applyAdminState();
-        refreshAll();
+        refreshAll(false);
     });
 
-    async function refreshAll() {
-        const badge = document.getElementById('connStatusBadge');
+    async function refreshAll(isManual = false) {
+        const badge = document.getElementById('connStatusBadge');[cite: 2]
         if (badge) {
-            badge.innerText = "同步中...";
-            badge.className = "text-xs px-2 py-0.5 rounded-full font-bold bg-amber-100 text-amber-700";
+            badge.innerText = "同步中...";[cite: 2]
+            badge.className = "text-xs px-2 py-0.5 rounded-full font-bold bg-amber-100 text-amber-700";[cite: 2]
         }
+
+        const errBox = document.getElementById('globalErrorBox');[cite: 2]
+        if (errBox) errBox.classList.add('hidden');
 
         await Promise.allSettled([
             fetchWorkers(),
@@ -743,14 +744,18 @@
             fetchPettyCash()
         ]);
 
-        renderWorkerMonthlySummary();
-        renderDailyDetailGroups();
-        renderSubconDashboard();
-        renderPettyCashGroups();
+        renderWorkerMonthlySummary();[cite: 2]
+        renderDailyDetailGroups();[cite: 2]
+        renderSubconDashboard();[cite: 2]
+        renderPettyCashGroups();[cite: 2]
 
         if (badge) {
-            badge.innerText = "云端正常";
+            badge.innerText = `云端正常 (${workersList.length}工人)`;
             badge.className = "text-xs px-2 py-0.5 rounded-full font-bold bg-emerald-100 text-emerald-700";
+        }
+
+        if (isManual) {
+            alert(`✅ 同步完成！已成功载入：${workersList.length} 位工人、${sitesList.length} 个工地`);
         }
     }
 
@@ -815,142 +820,144 @@
     }
 
     function toggleTimeMode() {
-        const mode = document.getElementById('attRecordMode').value;[cite: 1]
+        const mode = document.getElementById('attRecordMode').value;[cite: 1, 2]
         const modeTime = document.getElementById('modeTimeArea');
         const modeHours = document.getElementById('modeHoursArea');
-        if (mode === 'time') {[cite: 1]
-            if (modeTime) modeTime.classList.remove('hidden');
-            if (modeHours) modeHours.classList.add('hidden');
+        if (mode === 'time') {[cite: 1, 2]
+            if (modeTime) modeTime.classList.remove('hidden');[cite: 2]
+            if (modeHours) modeHours.classList.add('hidden');[cite: 2]
         } else {
-            if (modeTime) modeTime.classList.add('hidden');
-            if (modeHours) modeHours.classList.remove('hidden');
+            if (modeTime) modeTime.classList.add('hidden');[cite: 2]
+            if (modeHours) modeHours.classList.remove('hidden');[cite: 2]
         }
     }
 
     function togglePaymentSource() {
-        const paidBy = document.getElementById('payPaidBy').value;[cite: 1]
-        const methodSelect = document.getElementById('payMethod');[cite: 1]
+        const paidBy = document.getElementById('payPaidBy').value;[cite: 1, 2]
+        const methodSelect = document.getElementById('payMethod');[cite: 1, 2]
         if (!methodSelect) return;
-        if (paidBy === '公司转账') {[cite: 1]
-            methodSelect.innerHTML = `<option value="公司银行户口">🏢 公司主银行户口直接转账</option>`;[cite: 1]
+        if (paidBy === '公司转账') {[cite: 1, 2]
+            methodSelect.innerHTML = `<option value="公司银行户口">🏢 公司主银行户口直接转账</option>`;[cite: 1, 2]
         } else {
             methodSelect.innerHTML = `
                 <option value="CASH">💵 现金 (CASH)</option>
                 <option value="TNG">📱 Touch 'n Go</option>
                 <option value="HLB">🏦 Hong Leong Bank</option>
                 <option value="HSBC">🏦 HSBC Bank</option>
-            `;
+            `;[cite: 2]
         }
     }
 
     function setSubconNoteAdvance() {
-        const el = document.getElementById('payNote');
-        if (el) el.value = "Advance";
+        const el = document.getElementById('payNote');[cite: 2]
+        if (el) el.value = "Advance";[cite: 2]
     }
 
     // ==============================================================
-    // 1. 工人与工地
+    // 1. 工人与工地管理 (去除 status 限制，确保旧数据 100% 显现)
     // ==============================================================
     async function fetchWorkers() {
-        workersList = await safeFetch(`workers?status=eq.active&order=name.asc`);
+        // 直接读取 workers 表全部记录，解决 status 缺失导致不显示的问题
+        const data = await safeFetch(`workers?order=name.asc`);
+        workersList = data.filter(w => w.status !== 'inactive');
         renderWorkerSelectors();
         renderWorkerAdminList();
     }
 
     async function fetchSites() {
-        sitesList = await safeFetch(`job_sites?order=id.asc`);
-        renderSiteSelectors();
+        sitesList = await safeFetch(`job_sites?order=id.asc`);[cite: 2]
+        renderSiteSelectors();[cite: 2]
     }
 
     function renderWorkerSelectors() {
-        const checkList = document.getElementById('workerCheckboxList');
-        if (!checkList) return;
-        checkList.innerHTML = '';
+        const checkList = document.getElementById('workerCheckboxList');[cite: 2]
+        if (!checkList) return;[cite: 2]
+        checkList.innerHTML = '';[cite: 2]
         if (workersList.length === 0) {
-            checkList.innerHTML = '<div class="text-xs text-slate-400 col-span-full py-3 text-center">暂无工人，请先在名录录入</div>';
+            checkList.innerHTML = '<div class="text-xs text-slate-400 col-span-full py-3 text-center">暂无工人，请先在名录录入</div>';[cite: 2]
         } else {
             workersList.forEach(w => {
-                const label = document.createElement('label');
-                label.className = "flex items-center gap-1.5 p-1.5 bg-white rounded-lg border border-slate-200 cursor-pointer text-xs";
+                const label = document.createElement('label');[cite: 2]
+                label.className = "flex items-center gap-1.5 p-1.5 bg-white rounded-lg border border-slate-200 cursor-pointer text-xs";[cite: 2]
                 label.innerHTML = `
                     <input type="checkbox" name="selectedWorker" value="${w.id}" class="w-3.5 h-3.5 text-indigo-600 rounded">
                     <div class="truncate">
                         <span class="font-bold text-slate-800">${escapeHtml(w.name)}</span>
                         <span class="text-[10px] text-indigo-600">(${escapeHtml(w.worker_type || '中工')})</span>
                     </div>
-                `;
-                checkList.appendChild(label);
+                `;[cite: 2]
+                checkList.appendChild(label);[cite: 2]
             });
         }
 
-        const advSelect = document.getElementById('advWorkerSelect');
+        const advSelect = document.getElementById('advWorkerSelect');[cite: 2]
         if (advSelect) {
-            advSelect.innerHTML = '<option value="">-- 请选择借款工人 --</option>';
+            advSelect.innerHTML = '<option value="">-- 请选择借款工人 --</option>';[cite: 2]
             workersList.forEach(w => {
-                advSelect.innerHTML += `<option value="${w.id}">${escapeHtml(w.name)} (${escapeHtml(w.worker_type || '中工')})</option>`;
+                advSelect.innerHTML += `<option value="${w.id}">${escapeHtml(w.name)} (${escapeHtml(w.worker_type || '中工')})</option>`;[cite: 2]
             });
         }
     }
 
     function selectAllWorkers(state) {
-        document.querySelectorAll('input[name="selectedWorker"]').forEach(cb => cb.checked = state);[cite: 1]
+        document.querySelectorAll('input[name="selectedWorker"]').forEach(cb => cb.checked = state);[cite: 1, 2]
     }
 
     function renderSiteSelectors() {
-        const siteSelect = document.getElementById('attSiteName');
-        const detailSiteFilter = document.getElementById('detailSiteFilter');
-        const tagsArea = document.getElementById('siteTagsArea');
-        const archivedArea = document.getElementById('archivedSitesContainer');
-        if (!siteSelect) return;
+        const siteSelect = document.getElementById('attSiteName');[cite: 2]
+        const detailSiteFilter = document.getElementById('detailSiteFilter');[cite: 2]
+        const tagsArea = document.getElementById('siteTagsArea');[cite: 2]
+        const archivedArea = document.getElementById('archivedSitesContainer');[cite: 2]
+        if (!siteSelect) return;[cite: 2]
 
-        siteSelect.innerHTML = '';
-        if (detailSiteFilter) detailSiteFilter.innerHTML = '<option value="">全部工地 (不限)</option>';
-        if (tagsArea) tagsArea.innerHTML = '';
-        if (archivedArea) archivedArea.innerHTML = '';
+        siteSelect.innerHTML = '';[cite: 2]
+        if (detailSiteFilter) detailSiteFilter.innerHTML = '<option value="">全部工地 (不限)</option>';[cite: 2]
+        if (tagsArea) tagsArea.innerHTML = '';[cite: 2]
+        if (archivedArea) archivedArea.innerHTML = '';[cite: 2]
 
-        const activeSites = sitesList.filter(s => s.status === 'active' || !s.status);
-        const archivedSites = sitesList.filter(s => s.status === 'archived');
+        const activeSites = sitesList.filter(s => s.status !== 'archived');
+        const archivedSites = sitesList.filter(s => s.status === 'archived');[cite: 2]
 
         activeSites.forEach(s => {
-            siteSelect.innerHTML += `<option value="${escapeHtml(s.site_name)}">${escapeHtml(s.site_name)}</option>`;[cite: 1]
-            if (detailSiteFilter) detailSiteFilter.innerHTML += `<option value="${escapeHtml(s.site_name)}">${escapeHtml(s.site_name)}</option>`;
+            siteSelect.innerHTML += `<option value="${escapeHtml(s.site_name)}">${escapeHtml(s.site_name)}</option>`;[cite: 1, 2]
+            if (detailSiteFilter) detailSiteFilter.innerHTML += `<option value="${escapeHtml(s.site_name)}">${escapeHtml(s.site_name)}</option>`;[cite: 2]
             
             if (tagsArea) {
-                const div = document.createElement('div');
-                div.className = "flex items-center justify-between p-2 bg-slate-50 border border-slate-200 rounded-xl text-xs";
+                const div = document.createElement('div');[cite: 2]
+                div.className = "flex items-center justify-between p-2 bg-slate-50 border border-slate-200 rounded-xl text-xs";[cite: 2]
                 div.innerHTML = `
                     <span class="font-bold text-slate-800">📍 ${escapeHtml(s.site_name)}</span>
                     <div class="space-x-2">
                         <button type="button" onclick="editSiteName(${s.id}, '${escapeHtml(s.site_name)}')" class="text-indigo-600 font-semibold hover:underline cursor-pointer">改名</button>
                         <button type="button" onclick="setSiteStatus(${s.id}, 'archived')" class="text-rose-500 font-semibold hover:underline cursor-pointer">隐藏</button>
                     </div>
-                `;
-                tagsArea.appendChild(div);
+                `;[cite: 2]
+                tagsArea.appendChild(div);[cite: 2]
             }
         });
 
         if (archivedArea) {
             if (archivedSites.length === 0) {
-                archivedArea.innerHTML = '<div class="text-[11px] text-slate-400 py-1">暂无隐藏工地</div>';
+                archivedArea.innerHTML = '<div class="text-[11px] text-slate-400 py-1">暂无隐藏工地</div>';[cite: 2]
             } else {
                 archivedSites.forEach(s => {
-                    const div = document.createElement('div');
-                    div.className = "flex items-center justify-between p-2 bg-slate-100 border border-dashed border-slate-300 rounded-xl text-xs text-slate-500";
+                    const div = document.createElement('div');[cite: 2]
+                    div.className = "flex items-center justify-between p-2 bg-slate-100 border border-dashed border-slate-300 rounded-xl text-xs text-slate-500";[cite: 2]
                     div.innerHTML = `
                         <span>🔒 ${escapeHtml(s.site_name)} (已隐藏)</span>
                         <button type="button" onclick="setSiteStatus(${s.id}, 'active')" class="text-emerald-700 font-bold hover:underline cursor-pointer">
                             🔄 解除隐藏并恢复
                         </button>
-                    `;
-                    archivedArea.appendChild(div);
+                    `;[cite: 2]
+                    archivedArea.appendChild(div);[cite: 2]
                 });
             }
         }
     }
 
     function toggleArchivedSitesList() {
-        const el = document.getElementById('archivedSitesContainer');
-        if (el) el.classList.toggle('hidden');
+        const el = document.getElementById('archivedSitesContainer');[cite: 2]
+        if (el) el.classList.toggle('hidden');[cite: 2]
     }
 
     async function setSiteStatus(id, status) {
@@ -959,61 +966,61 @@
             headers: reqHeaders,
             body: JSON.stringify({ status })
         });
-        await fetchSites();
+        await fetchSites();[cite: 2]
     }
 
     async function editSiteName(id, oldName) {
-        const newName = prompt("请输入修改后的工地名称：", oldName);
-        if (!newName || newName.trim() === oldName) return;
+        const newName = prompt("请输入修改后的工地名称：", oldName);[cite: 2]
+        if (!newName || newName.trim() === oldName) return;[cite: 2]
         await fetch(`${SUPABASE_URL}/job_sites?id=eq.${id}`, {
             method: "PATCH",
             headers: reqHeaders,
             body: JSON.stringify({ site_name: newName.trim() })
         });
-        await fetchSites();
+        await fetchSites();[cite: 2]
     }
 
     async function handleNewSiteSubmit(e) {
         e.preventDefault();
-        const site_name = document.getElementById('newSiteName').value.trim();[cite: 1]
-        await fetch(`${SUPABASE_URL}/job_sites`, {[cite: 1]
-            method: "POST",[cite: 1]
-            headers: reqHeaders,[cite: 1]
-            body: JSON.stringify([{ site_name, status: 'active' }])[cite: 1]
+        const site_name = document.getElementById('newSiteName').value.trim();[cite: 1, 2]
+        await fetch(`${SUPABASE_URL}/job_sites`, {[cite: 1, 2]
+            method: "POST",[cite: 1, 2]
+            headers: reqHeaders,[cite: 1, 2]
+            body: JSON.stringify([{ site_name, status: 'active' }])[cite: 1, 2]
         });
-        document.getElementById('newSiteName').value = '';[cite: 1]
-        await fetchSites();[cite: 1]
+        document.getElementById('newSiteName').value = '';[cite: 1, 2]
+        await fetchSites();[cite: 1, 2]
     }
 
     async function handleNewWorkerSubmit(e) {
         e.preventDefault();
-        const name = document.getElementById('workerName').value.trim();[cite: 1]
-        const worker_type = document.getElementById('workerType').value;
-        const ic_passport = document.getElementById('workerIc').value.trim();[cite: 1]
-        const phone = document.getElementById('workerPhone').value.trim();[cite: 1]
-        const daily_rate = parseFloat(document.getElementById('workerRate').value);[cite: 1]
-        const hourly_rate = +(daily_rate / 8).toFixed(2);[cite: 1]
+        const name = document.getElementById('workerName').value.trim();[cite: 1, 2]
+        const worker_type = document.getElementById('workerType').value;[cite: 2]
+        const ic_passport = document.getElementById('workerIc').value.trim();[cite: 1, 2]
+        const phone = document.getElementById('workerPhone').value.trim();[cite: 1, 2]
+        const daily_rate = parseFloat(document.getElementById('workerRate').value);[cite: 1, 2]
+        const hourly_rate = +(daily_rate / 8).toFixed(2);[cite: 1, 2]
 
-        await fetch(`${SUPABASE_URL}/workers`, {[cite: 1]
-            method: "POST",[cite: 1]
-            headers: reqHeaders,[cite: 1]
-            body: JSON.stringify([{ name, worker_type, ic_passport, phone, daily_rate, hourly_rate }])
+        await fetch(`${SUPABASE_URL}/workers`, {[cite: 1, 2]
+            method: "POST",[cite: 1, 2]
+            headers: reqHeaders,[cite: 1, 2]
+            body: JSON.stringify([{ name, worker_type, ic_passport, phone, daily_rate, hourly_rate, status: 'active' }])
         });
-        document.getElementById('workerName').value = '';[cite: 1]
-        document.getElementById('workerIc').value = '';[cite: 1]
-        document.getElementById('workerPhone').value = '';[cite: 1]
-        document.getElementById('workerRate').value = '';[cite: 1]
-        await fetchWorkers();[cite: 1]
-        alert(`员工 [${name}] 已成功录入！`);
+        document.getElementById('workerName').value = '';[cite: 1, 2]
+        document.getElementById('workerIc').value = '';[cite: 1, 2]
+        document.getElementById('workerPhone').value = '';[cite: 1, 2]
+        document.getElementById('workerRate').value = '';[cite: 1, 2]
+        await fetchWorkers();[cite: 1, 2]
+        alert(`员工 [${name}] 已成功录入！`);[cite: 2]
     }
 
     function renderWorkerAdminList() {
-        const container = document.getElementById('registeredWorkersContainer');
-        if (!container) return;
-        container.innerHTML = '';
+        const container = document.getElementById('registeredWorkersContainer');[cite: 2]
+        if (!container) return;[cite: 2]
+        container.innerHTML = '';[cite: 2]
         workersList.forEach(w => {
-            const card = document.createElement('div');
-            card.className = "p-2.5 bg-slate-50 border border-slate-200 rounded-xl flex items-center justify-between gap-2 text-xs";
+            const card = document.createElement('div');[cite: 2]
+            card.className = "p-2.5 bg-slate-50 border border-slate-200 rounded-xl flex items-center justify-between gap-2 text-xs";[cite: 2]
             card.innerHTML = `
                 <div>
                     <span class="font-bold text-slate-800 text-sm">${escapeHtml(w.name)}</span>
@@ -1024,191 +1031,191 @@
                     <button onclick="requestSecureAction('edit', ${w.id})" class="px-2 py-1 bg-white border border-slate-200 rounded-lg text-indigo-600 font-semibold hover:bg-indigo-50 cursor-pointer">编辑</button>
                     <button onclick="requestSecureAction('archive', ${w.id})" class="px-2 py-1 bg-white border border-slate-200 rounded-lg text-rose-500 font-semibold hover:bg-rose-50 cursor-pointer">注销</button>
                 </div>
-            `;
-            container.appendChild(card);
+            `;[cite: 2]
+            container.appendChild(card);[cite: 2]
         });
     }
 
     function requestSecureAction(action, id) {
-        const pwd = prompt("管理操作（安全锁）：请输入密码验证");
-        if (pwd !== "2321") return alert("❌ 密码错误！");
+        const pwd = prompt("管理操作（安全锁）：请输入密码验证");[cite: 2]
+        if (pwd !== "2321") return alert("❌ 密码错误！");[cite: 2]
 
         if (action === 'edit') {
-            const w = workersList.find(item => item.id === id);
-            if (!w) return;
-            document.getElementById('editWorkerId').value = w.id;
-            document.getElementById('editWorkerName').value = w.name;
-            document.getElementById('editWorkerType').value = w.worker_type || '中工';
-            document.getElementById('editWorkerIc').value = w.ic_passport;
-            document.getElementById('editWorkerRate').value = w.daily_rate;
-            document.getElementById('editWorkerModal').classList.remove('hidden');
+            const w = workersList.find(item => item.id === id);[cite: 2]
+            if (!w) return;[cite: 2]
+            document.getElementById('editWorkerId').value = w.id;[cite: 2]
+            document.getElementById('editWorkerName').value = w.name;[cite: 2]
+            document.getElementById('editWorkerType').value = w.worker_type || '中工';[cite: 2]
+            document.getElementById('editWorkerIc').value = w.ic_passport;[cite: 2]
+            document.getElementById('editWorkerRate').value = w.daily_rate;[cite: 2]
+            document.getElementById('editWorkerModal').classList.remove('hidden');[cite: 2]
         } else if (action === 'archive') {
-            if (!confirm('确定将该工人注销？历史出勤和借款账单将完整保留。')) return;
+            if (!confirm('确定将该工人注销？历史出勤和借款账单将完整保留。')) return;[cite: 2]
             fetch(`${SUPABASE_URL}/workers?id=eq.${id}`, {
                 method: "PATCH",
                 headers: reqHeaders,
                 body: JSON.stringify({ status: 'inactive' })
-            }).then(() => fetchWorkers());
+            }).then(() => fetchWorkers());[cite: 2]
         }
     }
 
     function closeEditWorkerModal() {
-        document.getElementById('editWorkerModal').classList.add('hidden');
+        document.getElementById('editWorkerModal').classList.add('hidden');[cite: 2]
     }
 
     async function submitEditWorker() {
-        const id = document.getElementById('editWorkerId').value;
-        const name = document.getElementById('editWorkerName').value.trim();
-        const worker_type = document.getElementById('editWorkerType').value;
-        const ic_passport = document.getElementById('editWorkerIc').value.trim();
-        const daily_rate = parseFloat(document.getElementById('editWorkerRate').value);
-        const hourly_rate = +(daily_rate / 8).toFixed(2);
+        const id = document.getElementById('editWorkerId').value;[cite: 2]
+        const name = document.getElementById('editWorkerName').value.trim();[cite: 2]
+        const worker_type = document.getElementById('editWorkerType').value;[cite: 2]
+        const ic_passport = document.getElementById('editWorkerIc').value.trim();[cite: 2]
+        const daily_rate = parseFloat(document.getElementById('editWorkerRate').value);[cite: 2]
+        const hourly_rate = +(daily_rate / 8).toFixed(2);[cite: 2]
 
         await fetch(`${SUPABASE_URL}/workers?id=eq.${id}`, {
             method: "PATCH",
             headers: reqHeaders,
             body: JSON.stringify({ name, worker_type, ic_passport, daily_rate, hourly_rate })
         });
-        closeEditWorkerModal();
-        await fetchWorkers();
-        renderWorkerMonthlySummary();
-        renderDailyDetailGroups();
-        alert("员工档案已更新！");
+        closeEditWorkerModal();[cite: 2]
+        await fetchWorkers();[cite: 2]
+        renderWorkerMonthlySummary();[cite: 2]
+        renderDailyDetailGroups();[cite: 2]
+        alert("员工档案已更新！");[cite: 2]
     }
 
     // ==============================================================
     // 2. 打卡出勤与借支
     // ==============================================================
     async function fetchAttendance() {
-        attendanceList = await safeFetch(`attendance_records?order=work_date.desc,id.desc`);
+        attendanceList = await safeFetch(`attendance_records?order=work_date.desc,id.desc`);[cite: 2]
     }
 
     async function handleAttendanceSubmit(e) {
         e.preventDefault();
-        const checkedBoxes = Array.from(document.querySelectorAll('input[name="selectedWorker"]:checked'));[cite: 1]
-        if (checkedBoxes.length === 0) return alert('请在第一行勾选出勤工人！');
+        const checkedBoxes = Array.from(document.querySelectorAll('input[name="selectedWorker"]:checked'));[cite: 1, 2]
+        if (checkedBoxes.length === 0) return alert('请在第一行勾选出勤工人！');[cite: 2]
 
-        const work_date = document.getElementById('attWorkDate').value;[cite: 1]
-        const site_name = document.getElementById('attSiteName').value;[cite: 1]
-        const mode = document.getElementById('attRecordMode').value;[cite: 1]
-        const note = document.getElementById('attNote').value.trim();[cite: 1]
+        const work_date = document.getElementById('attWorkDate').value;[cite: 1, 2]
+        const site_name = document.getElementById('attSiteName').value;[cite: 1, 2]
+        const mode = document.getElementById('attRecordMode').value;[cite: 1, 2]
+        const note = document.getElementById('attNote').value.trim();[cite: 1, 2]
 
-        let total_hours = 0;[cite: 1]
-        let check_in = `${work_date}T08:00:00`;[cite: 1]
-        let check_out = `${work_date}T17:00:00`;[cite: 1]
+        let total_hours = 0;[cite: 1, 2]
+        let check_in = `${work_date}T08:00:00`;[cite: 1, 2]
+        let check_out = `${work_date}T17:00:00`;[cite: 1, 2]
 
-        if (mode === 'time') {[cite: 1]
-            const tIn = document.getElementById('attCheckInTime').value;[cite: 1]
-            const tOut = document.getElementById('attCheckOutTime').value;[cite: 1]
-            check_in = `${work_date}T${tIn}:00`;[cite: 1]
-            check_out = `${work_date}T${tOut}:00`;[cite: 1]
-            const diffHours = (new Date(check_out) - new Date(check_in)) / (1000 * 60 * 60);[cite: 1]
-            total_hours = diffHours >= 8 ? +(diffHours - 1).toFixed(2) : +diffHours.toFixed(2);[cite: 1]
+        if (mode === 'time') {[cite: 1, 2]
+            const tIn = document.getElementById('attCheckInTime').value;[cite: 1, 2]
+            const tOut = document.getElementById('attCheckOutTime').value;[cite: 1, 2]
+            check_in = `${work_date}T${tIn}:00`;[cite: 1, 2]
+            check_out = `${work_date}T${tOut}:00`;[cite: 1, 2]
+            const diffHours = (new Date(check_out) - new Date(check_in)) / (1000 * 60 * 60);[cite: 1, 2]
+            total_hours = diffHours >= 8 ? +(diffHours - 1).toFixed(2) : +diffHours.toFixed(2);[cite: 1, 2]
         } else {
-            total_hours = parseFloat(document.getElementById('attDirectHours').value);[cite: 1]
+            total_hours = parseFloat(document.getElementById('attDirectHours').value);[cite: 1, 2]
         }
 
-        if (isNaN(total_hours) || total_hours <= 0) return alert('工时无效！');
+        if (isNaN(total_hours) || total_hours <= 0) return alert('工时无效！');[cite: 2]
 
-        const recordsToInsert = checkedBoxes.map(cb => {[cite: 1]
-            const workerId = parseInt(cb.value);[cite: 1]
-            const worker = workersList.find(w => w.id === workerId);[cite: 1]
-            const hourlyRate = worker ? Number(worker.hourly_rate) : 12.5;[cite: 1]
-            const daily_wage = +(total_hours * hourlyRate).toFixed(2);[cite: 1]
-            return { work_date, worker_id: workerId, site_name, check_in, check_out, total_hours, daily_wage, note };[cite: 1]
+        const recordsToInsert = checkedBoxes.map(cb => {[cite: 1, 2]
+            const workerId = parseInt(cb.value);[cite: 1, 2]
+            const worker = workersList.find(w => w.id === workerId);[cite: 1, 2]
+            const hourlyRate = worker ? Number(worker.hourly_rate) : 12.5;[cite: 1, 2]
+            const daily_wage = +(total_hours * hourlyRate).toFixed(2);[cite: 1, 2]
+            return { work_date, worker_id: workerId, site_name, check_in, check_out, total_hours, daily_wage, note };[cite: 1, 2]
         });
 
-        const btn = document.getElementById('attSubmitBtn');[cite: 1]
-        btn.disabled = true;[cite: 1]
-        btn.innerText = '正在录入...';[cite: 1]
+        const btn = document.getElementById('attSubmitBtn');[cite: 1, 2]
+        btn.disabled = true;[cite: 1, 2]
+        btn.innerText = '正在录入...';[cite: 1, 2]
 
         try {
-            await fetch(`${SUPABASE_URL}/attendance_records`, {[cite: 1]
-                method: "POST",[cite: 1]
-                headers: reqHeaders,[cite: 1]
-                body: JSON.stringify(recordsToInsert)[cite: 1]
+            await fetch(`${SUPABASE_URL}/attendance_records`, {[cite: 1, 2]
+                method: "POST",[cite: 1, 2]
+                headers: reqHeaders,[cite: 1, 2]
+                body: JSON.stringify(recordsToInsert)[cite: 1, 2]
             });
-            selectAllWorkers(false);[cite: 1]
-            document.getElementById('attNote').value = '';[cite: 1]
-            await fetchAttendance();[cite: 1]
-            renderWorkerMonthlySummary();[cite: 1]
-            renderDailyDetailGroups();
-            alert(`✅ 批量出勤登记成功！共为 ${recordsToInsert.length} 位工人记录 [${site_name}] 工时：${total_hours} h。`);[cite: 1]
-        } catch (err) { alert(err.message); }[cite: 1]
+            selectAllWorkers(false);[cite: 1, 2]
+            document.getElementById('attNote').value = '';[cite: 1, 2]
+            await fetchAttendance();[cite: 1, 2]
+            renderWorkerMonthlySummary();[cite: 1, 2]
+            renderDailyDetailGroups();[cite: 2]
+            alert(`✅ 批量出勤登记成功！共为 ${recordsToInsert.length} 位工人记录 [${site_name}] 工时：${total_hours} h。`);[cite: 1, 2]
+        } catch (err) { alert(err.message); }[cite: 1, 2]
         finally {
-            btn.disabled = false;[cite: 1]
-            btn.innerText = '📝 一键批量生成出勤记录';[cite: 1]
+            btn.disabled = false;[cite: 1, 2]
+            btn.innerText = '📝 一键批量生成出勤记录';[cite: 1, 2]
         }
     }
 
     async function fetchAdvances() {
-        advancesList = await safeFetch(`worker_advances?order=advance_date.desc,id.desc`);
+        advancesList = await safeFetch(`worker_advances?order=advance_date.desc,id.desc`);[cite: 2]
     }
 
     function setAdvAmount(val) {
-        const el = document.getElementById('advAmount');
-        if (el) el.value = val;
+        const el = document.getElementById('advAmount');[cite: 2]
+        if (el) el.value = val;[cite: 2]
     }
 
     async function handleAdvanceSubmit(e) {
         e.preventDefault();
-        const advance_date = document.getElementById('advDate').value;[cite: 1]
-        const worker_id = parseInt(document.getElementById('advWorkerSelect').value);[cite: 1]
-        const advance_type = document.getElementById('advType').value;[cite: 1]
-        const amount = parseFloat(document.getElementById('advAmount').value);[cite: 1]
-        const note = document.getElementById('advNote').value.trim();[cite: 1]
+        const advance_date = document.getElementById('advDate').value;[cite: 1, 2]
+        const worker_id = parseInt(document.getElementById('advWorkerSelect').value);[cite: 1, 2]
+        const advance_type = document.getElementById('advType').value;[cite: 1, 2]
+        const amount = parseFloat(document.getElementById('advAmount').value);[cite: 1, 2]
+        const note = document.getElementById('advNote').value.trim();[cite: 1, 2]
 
-        if (!worker_id || isNaN(amount) || amount <= 0) return alert('请填写有效金额！');
+        if (!worker_id || isNaN(amount) || amount <= 0) return alert('请填写有效金额！');[cite: 2]
 
-        await fetch(`${SUPABASE_URL}/worker_advances`, {[cite: 1]
-            method: "POST",[cite: 1]
-            headers: reqHeaders,[cite: 1]
-            body: JSON.stringify([{ advance_date, worker_id, amount, advance_type, note }])[cite: 1]
+        await fetch(`${SUPABASE_URL}/worker_advances`, {[cite: 1, 2]
+            method: "POST",[cite: 1, 2]
+            headers: reqHeaders,[cite: 1, 2]
+            body: JSON.stringify([{ advance_date, worker_id, amount, advance_type, note }])[cite: 1, 2]
         });
-        document.getElementById('advAmount').value = '';[cite: 1]
-        document.getElementById('advNote').value = '';[cite: 1]
-        await fetchAdvances();[cite: 1]
-        renderWorkerMonthlySummary();[cite: 1]
-        renderDailyDetailGroups();
-        alert('借款扣款已登记！');
+        document.getElementById('advAmount').value = '';[cite: 1, 2]
+        document.getElementById('advNote').value = '';[cite: 1, 2]
+        await fetchAdvances();[cite: 1, 2]
+        renderWorkerMonthlySummary();[cite: 1, 2]
+        renderDailyDetailGroups();[cite: 2]
+        alert('借款扣款已登记！');[cite: 2]
     }
 
     function renderWorkerMonthlySummary() {
-        const yearEl = document.getElementById('filterYearSelect');
-        const monthEl = document.getElementById('filterMonthSelect');
-        if (!yearEl || !monthEl) return;
+        const yearEl = document.getElementById('filterYearSelect');[cite: 2]
+        const monthEl = document.getElementById('filterMonthSelect');[cite: 2]
+        if (!yearEl || !monthEl) return;[cite: 2]
 
-        const targetYearMonth = `${yearEl.value}-${monthEl.value}`;
-        const container = document.getElementById('workerMonthlyContainer');
-        if (!container) return;
-        container.innerHTML = '';
+        const targetYearMonth = `${yearEl.value}-${monthEl.value}`;[cite: 2]
+        const container = document.getElementById('workerMonthlyContainer');[cite: 2]
+        if (!container) return;[cite: 2]
+        container.innerHTML = '';[cite: 2]
 
-        let activeCount = 0;
+        let activeCount = 0;[cite: 2]
 
         workersList.forEach(w => {
-            let totalHours = 0;
-            let grossPay = 0;
+            let totalHours = 0;[cite: 2]
+            let grossPay = 0;[cite: 2]
             attendanceList.forEach(att => {
                 if (att.worker_id === w.id && (att.work_date || '').startsWith(targetYearMonth)) {
-                    totalHours += Number(att.total_hours || 0);
-                    grossPay += Number(att.daily_wage || 0);
+                    totalHours += Number(att.total_hours || 0);[cite: 2]
+                    grossPay += Number(att.daily_wage || 0);[cite: 2]
                 }
             });
 
-            if (totalHours <= 0) return;
-            activeCount++;
+            if (totalHours <= 0) return;[cite: 2]
+            activeCount++;[cite: 2]
 
-            let totalDeductions = 0;
+            let totalDeductions = 0;[cite: 2]
             advancesList.forEach(adv => {
                 if (adv.worker_id === w.id && (adv.advance_date || '').startsWith(targetYearMonth)) {
-                    totalDeductions += Number(adv.amount || 0);
+                    totalDeductions += Number(adv.amount || 0);[cite: 2]
                 }
             });
 
-            const netPay = grossPay - totalDeductions;
+            const netPay = grossPay - totalDeductions;[cite: 2]
 
-            const card = document.createElement('div');
-            card.className = "p-3 bg-white border border-slate-200 rounded-xl space-y-2 shadow-sm";
+            const card = document.createElement('div');[cite: 2]
+            card.className = "p-3 bg-white border border-slate-200 rounded-xl space-y-2 shadow-sm";[cite: 2]
             card.innerHTML = `
                 <div class="flex items-center justify-between">
                     <div>
@@ -1227,12 +1234,12 @@
                     <div><div class="text-slate-400 text-[10px]">应发工钱</div><div class="font-bold font-mono text-slate-800">RM ${grossPay.toFixed(2)}</div></div>
                     <div><div class="text-slate-400 text-[10px]">已借/代扣</div><div class="font-bold font-mono text-amber-600">RM ${totalDeductions.toFixed(2)}</div></div>
                 </div>
-            `;
-            container.appendChild(card);
+            `;[cite: 2]
+            container.appendChild(card);[cite: 2]
         });
 
         if (activeCount === 0) {
-            container.innerHTML = `<div class="p-6 text-center text-slate-400 text-xs">在该月份 (${targetYearMonth}) 没有员工产生工时</div>`;
+            container.innerHTML = `<div class="p-6 text-center text-slate-400 text-xs">在该月份 (${targetYearMonth}) 没有员工产生工时</div>`;[cite: 2]
         }
     }
 
@@ -1240,60 +1247,60 @@
     // 3. 工人打卡明细 (带工地搜索、工钱统计与按月折叠)
     // ==============================================================
     function renderDailyDetailGroups() {
-        const searchDateEl = document.getElementById('detailDateSearch');
-        const selectedSiteEl = document.getElementById('detailSiteFilter');
-        const attContainer = document.getElementById('attGroupedContainer');
-        const advContainer = document.getElementById('advGroupedContainer');
-        const summaryBox = document.getElementById('siteCostSummaryBox');
+        const searchDateEl = document.getElementById('detailDateSearch');[cite: 2]
+        const selectedSiteEl = document.getElementById('detailSiteFilter');[cite: 2]
+        const attContainer = document.getElementById('attGroupedContainer');[cite: 2]
+        const advContainer = document.getElementById('advGroupedContainer');[cite: 2]
+        const summaryBox = document.getElementById('siteCostSummaryBox');[cite: 2]
 
-        if (!attContainer || !advContainer) return;
+        if (!attContainer || !advContainer) return;[cite: 2]
 
-        const searchDate = searchDateEl ? searchDateEl.value : '';
-        const selectedSite = selectedSiteEl ? selectedSiteEl.value : '';
+        const searchDate = searchDateEl ? searchDateEl.value : '';[cite: 2]
+        const selectedSite = selectedSiteEl ? selectedSiteEl.value : '';[cite: 2]
 
-        attContainer.innerHTML = '';
-        advContainer.innerHTML = '';
+        attContainer.innerHTML = '';[cite: 2]
+        advContainer.innerHTML = '';[cite: 2]
 
-        let siteTotalHours = 0;
-        let siteTotalWage = 0;
+        let siteTotalHours = 0;[cite: 2]
+        let siteTotalWage = 0;[cite: 2]
 
-        const attGroups = {};
+        const attGroups = {};[cite: 2]
         attendanceList.forEach(item => {
-            if (searchDate && item.work_date !== searchDate) return;
-            if (selectedSite && item.site_name !== selectedSite) return;
+            if (searchDate && item.work_date !== searchDate) return;[cite: 2]
+            if (selectedSite && item.site_name !== selectedSite) return;[cite: 2]
 
-            siteTotalHours += Number(item.total_hours || 0);
-            siteTotalWage += Number(item.daily_wage || 0);
+            siteTotalHours += Number(item.total_hours || 0);[cite: 2]
+            siteTotalWage += Number(item.daily_wage || 0);[cite: 2]
 
-            const monthKey = (item.work_date || '').slice(0, 7) || '其它';
-            if (!attGroups[monthKey]) attGroups[monthKey] = [];
-            attGroups[monthKey].push(item);
+            const monthKey = (item.work_date || '').slice(0, 7) || '其它';[cite: 2]
+            if (!attGroups[monthKey]) attGroups[monthKey] = [];[cite: 2]
+            attGroups[monthKey].push(item);[cite: 2]
         });
 
         if (summaryBox) {
             if (selectedSite) {
-                summaryBox.classList.remove('hidden');
-                document.getElementById('summarySiteNameLabel').innerText = `📍 ${selectedSite}`;
-                document.getElementById('summarySiteHours').innerText = siteTotalHours.toFixed(1);
-                document.getElementById('summarySiteWage').innerText = `RM ${siteTotalWage.toFixed(2)}`;
+                summaryBox.classList.remove('hidden');[cite: 2]
+                document.getElementById('summarySiteNameLabel').innerText = `📍 ${selectedSite}`;[cite: 2]
+                document.getElementById('summarySiteHours').innerText = siteTotalHours.toFixed(1);[cite: 2]
+                document.getElementById('summarySiteWage').innerText = `RM ${siteTotalWage.toFixed(2)}`;[cite: 2]
             } else {
-                summaryBox.classList.add('hidden');
+                summaryBox.classList.add('hidden');[cite: 2]
             }
         }
 
-        const attMonths = Object.keys(attGroups).sort().reverse();
+        const attMonths = Object.keys(attGroups).sort().reverse();[cite: 2]
         if (attMonths.length === 0) {
-            attContainer.innerHTML = '<div class="text-xs text-slate-400 py-3 text-center">暂无符合条件的出勤记录</div>';
+            attContainer.innerHTML = '<div class="text-xs text-slate-400 py-3 text-center">暂无符合条件的出勤记录</div>';[cite: 2]
         } else {
             attMonths.forEach((mKey, idx) => {
-                const list = attGroups[mKey];
-                const groupDiv = document.createElement('div');
-                groupDiv.className = "border border-slate-200 rounded-xl overflow-hidden bg-white";
+                const list = attGroups[mKey];[cite: 2]
+                const groupDiv = document.createElement('div');[cite: 2]
+                groupDiv.className = "border border-slate-200 rounded-xl overflow-hidden bg-white";[cite: 2]
 
-                const isExpanded = !!(selectedSite || searchDate || idx === 0);
+                const isExpanded = !!(selectedSite || searchDate || idx === 0);[cite: 2]
 
-                let monthWage = 0;
-                list.forEach(r => { monthWage += Number(r.daily_wage || 0); });
+                let monthWage = 0;[cite: 2]
+                list.forEach(r => { monthWage += Number(r.daily_wage || 0); });[cite: 2]
 
                 groupDiv.innerHTML = `
                     <button type="button" onclick="toggleGroupBody('att-group-${mKey}')" class="w-full px-3 py-2 bg-slate-50 hover:bg-slate-100 flex items-center justify-between text-xs font-bold text-slate-800 cursor-pointer">
@@ -1304,14 +1311,14 @@
                         <span class="text-slate-400 text-[11px]">点击折叠 ▾</span>
                     </button>
                     <div id="att-group-${mKey}" class="${isExpanded ? '' : 'hidden'} divide-y divide-slate-100 p-1.5 space-y-1"></div>
-                `;
-                attContainer.appendChild(groupDiv);
+                `;[cite: 2]
+                attContainer.appendChild(groupDiv);[cite: 2]
 
-                const bodyDiv = groupDiv.querySelector(`#att-group-${mKey}`);
+                const bodyDiv = groupDiv.querySelector(`#att-group-${mKey}`);[cite: 2]
                 list.forEach(att => {
-                    const worker = workersList.find(w => w.id === att.worker_id) || {};
-                    const row = document.createElement('div');
-                    row.className = "p-2 bg-white rounded-lg border border-slate-100 flex items-center justify-between gap-2 text-xs";
+                    const worker = workersList.find(w => w.id === att.worker_id) || {};[cite: 2]
+                    const row = document.createElement('div');[cite: 2]
+                    row.className = "p-2 bg-white rounded-lg border border-slate-100 flex items-center justify-between gap-2 text-xs";[cite: 2]
                     row.innerHTML = `
                         <div class="space-y-0.5">
                             <div class="flex items-center gap-1.5 flex-wrap">
@@ -1329,44 +1336,44 @@
                             <button onclick="openEditAttModal(${att.id}, ${att.total_hours}, '${escapeHtml(att.note || '')}')" class="px-2 py-1 bg-slate-100 text-indigo-600 font-bold rounded-lg hover:bg-indigo-50 cursor-pointer">修改</button>
                             <button onclick="deleteAttendanceRecord(${att.id})" class="text-rose-400 hover:text-rose-600 font-bold cursor-pointer">✕</button>
                         </div>
-                    `;
-                    bodyDiv.appendChild(row);
+                    `;[cite: 2]
+                    bodyDiv.appendChild(row);[cite: 2]
                 });
             });
         }
 
-        const advGroups = {};
+        const advGroups = {};[cite: 2]
         advancesList.forEach(item => {
-            if (searchDate && item.advance_date !== searchDate) return;
-            const monthKey = (item.advance_date || '').slice(0, 7) || '其它';
-            if (!advGroups[monthKey]) advGroups[monthKey] = [];
-            advGroups[monthKey].push(item);
+            if (searchDate && item.advance_date !== searchDate) return;[cite: 2]
+            const monthKey = (item.advance_date || '').slice(0, 7) || '其它';[cite: 2]
+            if (!advGroups[monthKey]) advGroups[monthKey] = [];[cite: 2]
+            advGroups[monthKey].push(item);[cite: 2]
         });
 
-        const advMonths = Object.keys(advGroups).sort().reverse();
+        const advMonths = Object.keys(advGroups).sort().reverse();[cite: 2]
         if (advMonths.length === 0) {
-            advContainer.innerHTML = '<div class="text-xs text-slate-400 py-3 text-center">暂无符合条件的借款记录</div>';
+            advContainer.innerHTML = '<div class="text-xs text-slate-400 py-3 text-center">暂无符合条件的借款记录</div>';[cite: 2]
         } else {
             advMonths.forEach((mKey, idx) => {
-                const list = advGroups[mKey];
-                const groupDiv = document.createElement('div');
-                groupDiv.className = "border border-amber-200 rounded-xl overflow-hidden bg-white";
+                const list = advGroups[mKey];[cite: 2]
+                const groupDiv = document.createElement('div');[cite: 2]
+                groupDiv.className = "border border-amber-200 rounded-xl overflow-hidden bg-white";[cite: 2]
 
-                const isExpanded = !!(searchDate || idx === 0);
+                const isExpanded = !!(searchDate || idx === 0);[cite: 2]
                 groupDiv.innerHTML = `
                     <button type="button" onclick="toggleGroupBody('adv-group-${mKey}')" class="w-full px-3 py-2 bg-amber-50/50 hover:bg-amber-100/50 flex items-center justify-between text-xs font-bold text-amber-900 cursor-pointer">
                         <span>💰 ${mKey} 借支扣款 (${list.length} 条)</span>
                         <span class="text-amber-500 text-[11px]">点击折叠 ▾</span>
                     </button>
                     <div id="adv-group-${mKey}" class="${isExpanded ? '' : 'hidden'} divide-y divide-slate-100 p-1.5 space-y-1"></div>
-                `;
-                advContainer.appendChild(groupDiv);
+                `;[cite: 2]
+                advContainer.appendChild(groupDiv);[cite: 2]
 
-                const bodyDiv = groupDiv.querySelector(`#adv-group-${mKey}`);
+                const bodyDiv = groupDiv.querySelector(`#adv-group-${mKey}`);[cite: 2]
                 list.forEach(adv => {
-                    const worker = workersList.find(w => w.id === adv.worker_id) || {};
-                    const row = document.createElement('div');
-                    row.className = "p-2 bg-white rounded-lg border border-slate-100 flex items-center justify-between gap-2 text-xs";
+                    const worker = workersList.find(w => w.id === adv.worker_id) || {};[cite: 2]
+                    const row = document.createElement('div');[cite: 2]
+                    row.className = "p-2 bg-white rounded-lg border border-slate-100 flex items-center justify-between gap-2 text-xs";[cite: 2]
                     row.innerHTML = `
                         <div>
                             <div class="flex items-center gap-1.5 flex-wrap">
@@ -1380,48 +1387,48 @@
                             <span class="font-mono font-black text-amber-700 text-sm">RM ${Number(adv.amount).toFixed(2)}</span>
                             <button onclick="deleteAdvanceRecord(${adv.id})" class="text-rose-400 hover:text-rose-600 font-bold cursor-pointer">✕</button>
                         </div>
-                    `;
-                    bodyDiv.appendChild(row);
+                    `;[cite: 2]
+                    bodyDiv.appendChild(row);[cite: 2]
                 });
             });
         }
     }
 
     function clearDetailFilters() {
-        const d = document.getElementById('detailDateSearch');
-        const s = document.getElementById('detailSiteFilter');
-        if (d) d.value = '';
-        if (s) s.value = '';
-        renderDailyDetailGroups();
+        const d = document.getElementById('detailDateSearch');[cite: 2]
+        const s = document.getElementById('detailSiteFilter');[cite: 2]
+        if (d) d.value = '';[cite: 2]
+        if (s) s.value = '';[cite: 2]
+        renderDailyDetailGroups();[cite: 2]
     }
 
     function toggleGroupBody(id) {
-        const el = document.getElementById(id);
-        if (el) el.classList.toggle('hidden');
+        const el = document.getElementById(id);[cite: 2]
+        if (el) el.classList.toggle('hidden');[cite: 2]
     }
 
     function openEditAttModal(id, currentHours, currentNote) {
-        document.getElementById('editAttId').value = id;
-        document.getElementById('editAttHours').value = currentHours;
-        document.getElementById('editAttNote').value = currentNote;
-        document.getElementById('editAttModal').classList.remove('hidden');
+        document.getElementById('editAttId').value = id;[cite: 2]
+        document.getElementById('editAttHours').value = currentHours;[cite: 2]
+        document.getElementById('editAttNote').value = currentNote;[cite: 2]
+        document.getElementById('editAttModal').classList.remove('hidden');[cite: 2]
     }
 
     function closeEditAttModal() {
-        document.getElementById('editAttModal').classList.add('hidden');
+        document.getElementById('editAttModal').classList.add('hidden');[cite: 2]
     }
 
     async function submitEditAttendance() {
-        const id = document.getElementById('editAttId').value;
-        const total_hours = parseFloat(document.getElementById('editAttHours').value);
-        const note = document.getElementById('editAttNote').value.trim();
+        const id = document.getElementById('editAttId').value;[cite: 2]
+        const total_hours = parseFloat(document.getElementById('editAttHours').value);[cite: 2]
+        const note = document.getElementById('editAttNote').value.trim();[cite: 2]
 
-        if (isNaN(total_hours) || total_hours <= 0) return alert("工时无效！");
+        if (isNaN(total_hours) || total_hours <= 0) return alert("工时无效！");[cite: 2]
 
-        const target = attendanceList.find(a => a.id === parseInt(id));
-        const worker = workersList.find(w => w.id === (target ? target.worker_id : null));
-        const hourlyRate = worker ? Number(worker.hourly_rate) : 12.5;
-        const daily_wage = +(total_hours * hourlyRate).toFixed(2);
+        const target = attendanceList.find(a => a.id === parseInt(id));[cite: 2]
+        const worker = workersList.find(w => w.id === (target ? target.worker_id : null));[cite: 2]
+        const hourlyRate = worker ? Number(worker.hourly_rate) : 12.5;[cite: 2]
+        const daily_wage = +(total_hours * hourlyRate).toFixed(2);[cite: 2]
 
         await fetch(`${SUPABASE_URL}/attendance_records?id=eq.${id}`, {
             method: "PATCH",
@@ -1429,27 +1436,27 @@
             body: JSON.stringify({ total_hours, daily_wage, note })
         });
 
-        closeEditAttModal();
-        await fetchAttendance();
-        renderWorkerMonthlySummary();
-        renderDailyDetailGroups();
-        alert("工时与备注已更新！");
+        closeEditAttModal();[cite: 2]
+        await fetchAttendance();[cite: 2]
+        renderWorkerMonthlySummary();[cite: 2]
+        renderDailyDetailGroups();[cite: 2]
+        alert("工时与备注已更新！");[cite: 2]
     }
 
     async function deleteAttendanceRecord(id) {
-        if (!confirm('确定删除该笔出勤？')) return;
-        await fetch(`${SUPABASE_URL}/attendance_records?id=eq.${id}`, { method: "DELETE", headers: reqHeaders });
-        await fetchAttendance();
-        renderWorkerMonthlySummary();
-        renderDailyDetailGroups();
+        if (!confirm('确定删除该笔出勤？')) return;[cite: 2]
+        await fetch(`${SUPABASE_URL}/attendance_records?id=eq.${id}`, { method: "DELETE", headers: reqHeaders });[cite: 2]
+        await fetchAttendance();[cite: 2]
+        renderWorkerMonthlySummary();[cite: 2]
+        renderDailyDetailGroups();[cite: 2]
     }
 
     async function deleteAdvanceRecord(id) {
-        if (!confirm('确定删除该借款记录？')) return;
-        await fetch(`${SUPABASE_URL}/worker_advances?id=eq.${id}`, { method: "DELETE", headers: reqHeaders });
-        await fetchAdvances();
-        renderWorkerMonthlySummary();
-        renderDailyDetailGroups();
+        if (!confirm('确定删除该借款记录？')) return;[cite: 2]
+        await fetch(`${SUPABASE_URL}/worker_advances?id=eq.${id}`, { method: "DELETE", headers: reqHeaders });[cite: 2]
+        await fetchAdvances();[cite: 2]
+        renderWorkerMonthlySummary();[cite: 2]
+        renderDailyDetailGroups();[cite: 2]
     }
 
     // ==============================================================
@@ -1457,124 +1464,124 @@
     // ==============================================================
     async function fetchSubconData() {
         const [cData, pData, vData] = await Promise.all([
-            safeFetch(`subcon_contracts?order=id.desc`),
-            safeFetch(`subcon_payments?order=payment_time.desc`),
-            safeFetch(`subcon_vo_records?order=vo_date.desc`)
+            safeFetch(`subcon_contracts?order=id.desc`),[cite: 2]
+            safeFetch(`subcon_payments?order=payment_time.desc`),[cite: 2]
+            safeFetch(`subcon_vo_records?order=vo_date.desc`)[cite: 2]
         ]);
-        subconContracts = cData;
-        subconPayments = pData;
-        subconVos = vData;
-        renderSubconSelectors();
+        subconContracts = cData;[cite: 2]
+        subconPayments = pData;[cite: 2]
+        subconVos = vData;[cite: 2]
+        renderSubconSelectors();[cite: 2]
     }
 
     function renderSubconSelectors() {
-        const select = document.getElementById('payContractSelect');[cite: 1]
-        if (!select) return;
-        select.innerHTML = '<option value="">-- 请选择分包工程 --</option>';[cite: 1]
-        subconContracts.forEach(c => {[cite: 1]
-            select.innerHTML += `<option value="${c.id}">${escapeHtml(c.project_name)} (${escapeHtml(c.subcon_name)})</option>`;[cite: 1]
+        const select = document.getElementById('payContractSelect');[cite: 1, 2]
+        if (!select) return;[cite: 2]
+        select.innerHTML = '<option value="">-- 请选择分包工程 --</option>';[cite: 1, 2]
+        subconContracts.forEach(c => {[cite: 1, 2]
+            select.innerHTML += `<option value="${c.id}">${escapeHtml(c.project_name)} (${escapeHtml(c.subcon_name)})</option>`;[cite: 1, 2]
         });
     }
 
     async function handleNewSubconSubmit(e) {
         e.preventDefault();
-        const contract_date = document.getElementById('subContractDate').value;
-        const project_name = document.getElementById('subProjectName').value.trim();[cite: 1]
-        const subcon_name = document.getElementById('subSubconName').value.trim();[cite: 1]
-        const base_amount = parseFloat(document.getElementById('subBaseAmount').value);[cite: 1]
+        const contract_date = document.getElementById('subContractDate').value;[cite: 2]
+        const project_name = document.getElementById('subProjectName').value.trim();[cite: 1, 2]
+        const subcon_name = document.getElementById('subSubconName').value.trim();[cite: 1, 2]
+        const base_amount = parseFloat(document.getElementById('subBaseAmount').value);[cite: 1, 2]
 
-        await fetch(`${SUPABASE_URL}/subcon_contracts`, {[cite: 1]
-            method: "POST",[cite: 1]
-            headers: reqHeaders,[cite: 1]
-            body: JSON.stringify([{ contract_date, project_name, subcon_name, base_amount, vo_amount: 0 }])
+        await fetch(`${SUPABASE_URL}/subcon_contracts`, {[cite: 1, 2]
+            method: "POST",[cite: 1, 2]
+            headers: reqHeaders,[cite: 1, 2]
+            body: JSON.stringify([{ contract_date, project_name, subcon_name, base_amount, vo_amount: 0 }])[cite: 2]
         });
-        document.getElementById('subProjectName').value = '';[cite: 1]
-        document.getElementById('subSubconName').value = '';[cite: 1]
-        document.getElementById('subBaseAmount').value = '';[cite: 1]
-        await fetchSubconData();
-        renderSubconDashboard();[cite: 1]
-        alert(`分包工程 [${project_name}] 合同建立成功！`);
+        document.getElementById('subProjectName').value = '';[cite: 1, 2]
+        document.getElementById('subSubconName').value = '';[cite: 1, 2]
+        document.getElementById('subBaseAmount').value = '';[cite: 1, 2]
+        await fetchSubconData();[cite: 2]
+        renderSubconDashboard();[cite: 1, 2]
+        alert(`分包工程 [${project_name}] 合同建立成功！`);[cite: 2]
     }
 
     async function handleSubconPaymentSubmit(e) {
         e.preventDefault();
-        const contract_id = parseInt(document.getElementById('payContractSelect').value);[cite: 1]
-        const payment_time = document.getElementById('payDateTime').value;[cite: 1]
-        const amount = parseFloat(document.getElementById('payAmount').value);[cite: 1]
-        const paid_by = document.getElementById('payPaidBy').value;[cite: 1]
-        const payer_name = document.getElementById('payPayerName').value.trim() || 'Marco';
-        const payment_method = document.getElementById('payMethod').value;[cite: 1]
-        const note = document.getElementById('payNote').value.trim();[cite: 1]
+        const contract_id = parseInt(document.getElementById('payContractSelect').value);[cite: 1, 2]
+        const payment_time = document.getElementById('payDateTime').value;[cite: 1, 2]
+        const amount = parseFloat(document.getElementById('payAmount').value);[cite: 1, 2]
+        const paid_by = document.getElementById('payPaidBy').value;[cite: 1, 2]
+        const payer_name = document.getElementById('payPayerName').value.trim() || 'Marco';[cite: 2]
+        const payment_method = document.getElementById('payMethod').value;[cite: 1, 2]
+        const note = document.getElementById('payNote').value.trim();[cite: 1, 2]
 
-        if (!contract_id || isNaN(amount) || amount <= 0) return alert('请填写有效金额！');
+        if (!contract_id || isNaN(amount) || amount <= 0) return alert('请填写有效金额！');[cite: 2]
 
-        await fetch(`${SUPABASE_URL}/subcon_payments`, {[cite: 1]
-            method: "POST",[cite: 1]
-            headers: reqHeaders,[cite: 1]
-            body: JSON.stringify([{ contract_id, payment_time, amount, paid_by, payer_name, payment_method, note, is_claimed: false, claimed_pv: '' }])
+        await fetch(`${SUPABASE_URL}/subcon_payments`, {[cite: 1, 2]
+            method: "POST",[cite: 1, 2]
+            headers: reqHeaders,[cite: 1, 2]
+            body: JSON.stringify([{ contract_id, payment_time, amount, paid_by, payer_name, payment_method, note, is_claimed: false, claimed_pv: '' }])[cite: 2]
         });
-        document.getElementById('payAmount').value = '';[cite: 1]
-        document.getElementById('payNote').value = '';[cite: 1]
-        await fetchSubconData();
-        renderSubconDashboard();[cite: 1]
-        alert('Subcon 领款记录已入账！');
+        document.getElementById('payAmount').value = '';[cite: 1, 2]
+        document.getElementById('payNote').value = '';[cite: 1, 2]
+        await fetchSubconData();[cite: 2]
+        renderSubconDashboard();[cite: 1, 2]
+        alert('Subcon 领款记录已入账！');[cite: 2]
     }
 
     function renderSubconDashboard() {
-        const container = document.getElementById('subconCardsContainer');[cite: 1]
-        if (!container) return;
-        container.innerHTML = '';[cite: 1]
+        const container = document.getElementById('subconCardsContainer');[cite: 1, 2]
+        if (!container) return;[cite: 2]
+        container.innerHTML = '';[cite: 1, 2]
 
-        let privateSum = 0;
-        let unclaimedSum = 0;
-        let companySum = 0;
-        let contractAllSum = 0;
+        let privateSum = 0;[cite: 2]
+        let unclaimedSum = 0;[cite: 2]
+        let companySum = 0;[cite: 2]
+        let contractAllSum = 0;[cite: 2]
 
         subconPayments.forEach(p => {
-            const amt = Number(p.amount || 0);
-            if (p.paid_by === '私人先给') {
-                privateSum += amt;
-                if (!p.is_claimed) unclaimedSum += amt;
+            const amt = Number(p.amount || 0);[cite: 2]
+            if (p.paid_by === '私人先给') {[cite: 2]
+                privateSum += amt;[cite: 2]
+                if (!p.is_claimed) unclaimedSum += amt;[cite: 2]
             } else {
-                companySum += amt;
+                companySum += amt;[cite: 2]
             }
         });
 
-        const pTot = document.getElementById('subconPrivateTotal');
-        const uTot = document.getElementById('subconUnclaimedTotal');
-        const cTot = document.getElementById('subconCompanyTotal');
-        if (pTot) pTot.innerText = privateSum.toFixed(2);
-        if (uTot) uTot.innerText = `待Claim: RM ${unclaimedSum.toFixed(2)}`;
-        if (cTot) cTot.innerText = companySum.toFixed(2);
+        const pTot = document.getElementById('subconPrivateTotal');[cite: 2]
+        const uTot = document.getElementById('subconUnclaimedTotal');[cite: 2]
+        const cTot = document.getElementById('subconCompanyTotal');[cite: 2]
+        if (pTot) pTot.innerText = privateSum.toFixed(2);[cite: 2]
+        if (uTot) uTot.innerText = `待Claim: RM ${unclaimedSum.toFixed(2)}`;[cite: 2]
+        if (cTot) cTot.innerText = companySum.toFixed(2);[cite: 2]
 
-        subconContracts.forEach(c => {[cite: 1]
-            let totalVO = 0;[cite: 1]
-            const currentVos = subconVos.filter(v => v.contract_id === c.id);[cite: 1]
-            currentVos.forEach(v => totalVO += Number(v.vo_amount || 0));[cite: 1]
+        subconContracts.forEach(c => {[cite: 1, 2]
+            let totalVO = 0;[cite: 1, 2]
+            const currentVos = subconVos.filter(v => v.contract_id === c.id);[cite: 1, 2]
+            currentVos.forEach(v => totalVO += Number(v.vo_amount || 0));[cite: 1, 2]
 
-            const finalContractTotal = Number(c.base_amount) + totalVO;[cite: 1]
-            contractAllSum += finalContractTotal;
+            const finalContractTotal = Number(c.base_amount) + totalVO;[cite: 1, 2]
+            contractAllSum += finalContractTotal;[cite: 2]
 
-            let paidTotal = 0;[cite: 1]
-            const currentPayments = subconPayments.filter(p => p.contract_id === c.id);[cite: 1]
-            currentPayments.forEach(p => paidTotal += Number(p.amount || 0));[cite: 1]
+            let paidTotal = 0;[cite: 1, 2]
+            const currentPayments = subconPayments.filter(p => p.contract_id === c.id);[cite: 1, 2]
+            currentPayments.forEach(p => paidTotal += Number(p.amount || 0));[cite: 1, 2]
 
-            const balance = finalContractTotal - paidTotal;[cite: 1]
+            const balance = finalContractTotal - paidTotal;[cite: 1, 2]
 
-            let paymentRowsHtml = '';[cite: 1]
-            if (currentPayments.length === 0) {[cite: 1]
-                paymentRowsHtml = '<div class="text-xs text-slate-400 py-1">尚未有领款记录</div>';[cite: 1]
+            let paymentRowsHtml = '';[cite: 1, 2]
+            if (currentPayments.length === 0) {[cite: 1, 2]
+                paymentRowsHtml = '<div class="text-xs text-slate-400 py-1">尚未有领款记录</div>';[cite: 1, 2]
             } else {
-                currentPayments.forEach(p => {[cite: 1]
-                    const isPrivate = p.paid_by === '私人先给';[cite: 1]
-                    const timeFormatted = (p.payment_time || '').replace('T', ' ').slice(0, 16);
+                currentPayments.forEach(p => {[cite: 1, 2]
+                    const isPrivate = p.paid_by === '私人先给';[cite: 1, 2]
+                    const timeFormatted = (p.payment_time || '').replace('T', ' ').slice(0, 16);[cite: 2]
 
-                    let claimHtml = '';
-                    if (isPrivate) {
-                        if (p.is_claimed) {
-                            claimHtml = `<span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800">✅ Claimed (${escapeHtml(p.claimed_pv)})</span>`;
+                    let claimHtml = '';[cite: 2]
+                    if (isPrivate) {[cite: 2]
+                        if (p.is_claimed) {[cite: 2]
+                            claimHtml = `<span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800">✅ Claimed (${escapeHtml(p.claimed_pv)})</span>`;[cite: 2]
                         } else {
-                            claimHtml = `<button onclick="openClaimModal('subcon', ${p.id})" class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500 hover:bg-amber-600 text-white cursor-pointer">📌 书记 Claim</button>`;
+                            claimHtml = `<button onclick="openClaimModal('subcon', ${p.id})" class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500 hover:bg-amber-600 text-white cursor-pointer">📌 书记 Claim</button>`;[cite: 2]
                         }
                     }
 
@@ -1596,12 +1603,12 @@
                                 <button onclick="deleteSubconPayment(${p.id})" class="text-slate-300 hover:text-rose-500 font-bold cursor-pointer">✕</button>
                             </div>
                         </div>
-                    `;
+                    `;[cite: 2]
                 });
             }
 
-            const card = document.createElement('div');[cite: 1]
-            card.className = "p-3.5 sm:p-5 border border-slate-200 rounded-2xl bg-white space-y-2.5 shadow-sm";[cite: 1]
+            const card = document.createElement('div');[cite: 1, 2]
+            card.className = "p-3.5 sm:p-5 border border-slate-200 rounded-2xl bg-white space-y-2.5 shadow-sm";[cite: 1, 2]
             card.innerHTML = `
                 <div class="flex items-center justify-between gap-2 border-b pb-2">
                     <div>
@@ -1627,89 +1634,89 @@
                     <span class="text-xs font-bold text-slate-700">支出记录：</span>
                     <div class="max-h-48 overflow-y-auto">${paymentRowsHtml}</div>
                 </div>
-            `;
-            container.appendChild(card);[cite: 1]
+            `;[cite: 1, 2]
+            container.appendChild(card);[cite: 1, 2]
         });
 
-        const allCont = document.getElementById('subconAllContractsTotal');
-        if (allCont) allCont.innerText = contractAllSum.toFixed(2);
+        const allCont = document.getElementById('subconAllContractsTotal');[cite: 2]
+        if (allCont) allCont.innerText = contractAllSum.toFixed(2);[cite: 2]
     }
 
     async function deleteSubconPayment(id) {
-        if (!confirm('确定删除该笔领款记录？')) return;
-        await fetch(`${SUPABASE_URL}/subcon_payments?id=eq.${id}`, { method: "DELETE", headers: reqHeaders });
-        await fetchSubconData();
-        renderSubconDashboard();
+        if (!confirm('确定删除该笔领款记录？')) return;[cite: 2]
+        await fetch(`${SUPABASE_URL}/subcon_payments?id=eq.${id}`, { method: "DELETE", headers: reqHeaders });[cite: 2]
+        await fetchSubconData();[cite: 2]
+        renderSubconDashboard();[cite: 2]
     }
 
     function openVoModal(contractId) {
-        document.getElementById('voContractId').value = contractId;[cite: 1]
-        const now = new Date();[cite: 1]
-        document.getElementById('voDate').value = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;[cite: 1]
-        document.getElementById('voDesc').value = '';[cite: 1]
-        document.getElementById('voAmt').value = '';[cite: 1]
-        document.getElementById('voModal').classList.remove('hidden');[cite: 1]
+        document.getElementById('voContractId').value = contractId;[cite: 1, 2]
+        const now = new Date();[cite: 1, 2]
+        document.getElementById('voDate').value = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;[cite: 1, 2]
+        document.getElementById('voDesc').value = '';[cite: 1, 2]
+        document.getElementById('voAmt').value = '';[cite: 1, 2]
+        document.getElementById('voModal').classList.remove('hidden');[cite: 1, 2]
     }
-    function closeVoModal() { document.getElementById('voModal').classList.add('hidden'); }[cite: 1]
+    function closeVoModal() { document.getElementById('voModal').classList.add('hidden'); }[cite: 1, 2]
 
     async function submitVoRecord() {
-        const contract_id = parseInt(document.getElementById('voContractId').value);[cite: 1]
-        const vo_date = document.getElementById('voDate').value;[cite: 1]
-        const vo_description = document.getElementById('voDesc').value.trim();[cite: 1]
-        const vo_amount = parseFloat(document.getElementById('voAmt').value);[cite: 1]
+        const contract_id = parseInt(document.getElementById('voContractId').value);[cite: 1, 2]
+        const vo_date = document.getElementById('voDate').value;[cite: 1, 2]
+        const vo_description = document.getElementById('voDesc').value.trim();[cite: 1, 2]
+        const vo_amount = parseFloat(document.getElementById('voAmt').value);[cite: 1, 2]
 
-        if (!vo_description || isNaN(vo_amount) || vo_amount <= 0) return alert('请完整填写 VO！');[cite: 1]
+        if (!vo_description || isNaN(vo_amount) || vo_amount <= 0) return alert('请完整填写 VO！');[cite: 1, 2]
 
-        await fetch(`${SUPABASE_URL}/subcon_vo_records`, {[cite: 1]
-            method: "POST",[cite: 1]
-            headers: reqHeaders,[cite: 1]
-            body: JSON.stringify([{ contract_id, vo_date, vo_description, vo_amount }])[cite: 1]
+        await fetch(`${SUPABASE_URL}/subcon_vo_records`, {[cite: 1, 2]
+            method: "POST",[cite: 1, 2]
+            headers: reqHeaders,[cite: 1, 2]
+            body: JSON.stringify([{ contract_id, vo_date, vo_description, vo_amount }])[cite: 1, 2]
         });
-        closeVoModal();[cite: 1]
-        await fetchSubconData();
-        renderSubconDashboard();[cite: 1]
+        closeVoModal();[cite: 1, 2]
+        await fetchSubconData();[cite: 2]
+        renderSubconDashboard();[cite: 1, 2]
     }
 
     // ==============================================================
     // 5. Marco 现金
     // ==============================================================
     async function fetchPettyCash() {
-        pettyCashList = await safeFetch(`marco_petty_cash?order=record_date.desc,record_time.desc`);
+        pettyCashList = await safeFetch(`marco_petty_cash?order=record_date.desc,record_time.desc`);[cite: 2]
     }
 
     function togglePettyCategory() {
-        const type = document.getElementById('pettyTransType').value;
-        const cat = document.getElementById('pettyCategory');
-        if (!cat) return;
-        if (type === 'IN') {
+        const type = document.getElementById('pettyTransType').value;[cite: 2]
+        const cat = document.getElementById('pettyCategory');[cite: 2]
+        if (!cat) return;[cite: 2]
+        if (type === 'IN') {[cite: 2]
             cat.innerHTML = `
                 <option value="卖废铁现金">卖工地废铁/旧料</option>
                 <option value="退还押金">退还押金/保证金</option>
                 <option value="现场收到款">现场收取客户现金</option>
                 <option value="其他收入">其他现金收入</option>
-            `;
+            `;[cite: 2]
         } else {
             cat.innerHTML = `
                 <option value="买料/工具">买料 / 现场五金工具</option>
                 <option value="维修/安装">机械维修 / 安装费</option>
                 <option value="工人杂支">现场杂支 / 伙食水钱</option>
                 <option value="其他">其他款项</option>
-            `;
+            `;[cite: 2]
         }
     }
 
     async function handlePettyCashSubmit(e) {
         e.preventDefault();
-        const trans_type = document.getElementById('pettyTransType').value;
-        const record_date = document.getElementById('pettyDate').value;
-        const record_time = document.getElementById('pettyTime').value;
-        const amount = parseFloat(document.getElementById('pettyAmount').value);
-        const shop_name = document.getElementById('pettyShopName').value.trim();
-        const category = document.getElementById('pettyCategory').value;
-        const receipt_no = document.getElementById('pettyReceiptNo').value.trim();
-        const description = document.getElementById('pettyDescription').value.trim();
+        const trans_type = document.getElementById('pettyTransType').value;[cite: 2]
+        const record_date = document.getElementById('pettyDate').value;[cite: 2]
+        const record_time = document.getElementById('pettyTime').value;[cite: 2]
+        const amount = parseFloat(document.getElementById('pettyAmount').value);[cite: 2]
+        const shop_name = document.getElementById('pettyShopName').value.trim();[cite: 2]
+        const category = document.getElementById('pettyCategory').value;[cite: 2]
+        const receipt_no = document.getElementById('pettyReceiptNo').value.trim();[cite: 2]
+        const description = document.getElementById('pettyDescription').value.trim();[cite: 2]
 
-        if (isNaN(amount) || amount <= 0 || !description) return alert('请填写完整！');
+        if (isNaN(amount) || amount <= 0 || !description) return alert('请填写完整！');[cite: 2]
 
         await fetch(`${SUPABASE_URL}/marco_petty_cash`, {
             method: "POST",
@@ -1717,83 +1724,83 @@
             body: JSON.stringify([{ record_date, record_time, trans_type, amount, shop_name, category, receipt_no, description, is_claimed: false, pv_number: '' }])
         });
 
-        document.getElementById('pettyAmount').value = '';
-        document.getElementById('pettyShopName').value = '';
-        document.getElementById('pettyReceiptNo').value = '';
-        document.getElementById('pettyDescription').value = '';
+        document.getElementById('pettyAmount').value = '';[cite: 2]
+        document.getElementById('pettyShopName').value = '';[cite: 2]
+        document.getElementById('pettyReceiptNo').value = '';[cite: 2]
+        document.getElementById('pettyDescription').value = '';[cite: 2]
 
-        await fetchPettyCash();
-        renderPettyCashGroups();
-        alert('现金收支已记入备用金账本！');
+        await fetchPettyCash();[cite: 2]
+        renderPettyCashGroups();[cite: 2]
+        alert('现金收支已记入备用金账本！');[cite: 2]
     }
 
     function renderPettyCashGroups() {
-        const container = document.getElementById('pettyGroupedContainer');
-        if (!container) return;
-        container.innerHTML = '';
+        const container = document.getElementById('pettyGroupedContainer');[cite: 2]
+        if (!container) return;[cite: 2]
+        container.innerHTML = '';[cite: 2]
 
-        let outTotal = 0;
-        let inTotal = 0;
-        let unclaimedOut = 0;
-        let unclaimedIn = 0;
+        let outTotal = 0;[cite: 2]
+        let inTotal = 0;[cite: 2]
+        let unclaimedOut = 0;[cite: 2]
+        let unclaimedIn = 0;[cite: 2]
 
-        const pettyGroups = {};
+        const pettyGroups = {};[cite: 2]
 
         pettyCashList.forEach(item => {
-            const amt = Number(item.amount || 0);
-            if (item.trans_type === 'OUT') {
-                outTotal += amt;
-                if (!item.is_claimed) unclaimedOut += amt;
+            const amt = Number(item.amount || 0);[cite: 2]
+            if (item.trans_type === 'OUT') {[cite: 2]
+                outTotal += amt;[cite: 2]
+                if (!item.is_claimed) unclaimedOut += amt;[cite: 2]
             } else {
-                inTotal += amt;
-                if (!item.is_claimed) unclaimedIn += amt;
+                inTotal += amt;[cite: 2]
+                if (!item.is_claimed) unclaimedIn += amt;[cite: 2]
             }
 
-            const monthKey = (item.record_date || '').slice(0, 7) || '其它';
-            if (!pettyGroups[monthKey]) pettyGroups[monthKey] = [];
-            pettyGroups[monthKey].push(item);
+            const monthKey = (item.record_date || '').slice(0, 7) || '其它';[cite: 2]
+            if (!pettyGroups[monthKey]) pettyGroups[monthKey] = [];[cite: 2]
+            pettyGroups[monthKey].push(item);[cite: 2]
         });
 
-        const oEl = document.getElementById('pettyOutTotal');
-        const iEl = document.getElementById('pettyInTotal');
-        const nEl = document.getElementById('pettyNetClaim');
-        if (oEl) oEl.innerText = outTotal.toFixed(2);
-        if (iEl) iEl.innerText = inTotal.toFixed(2);
-        if (nEl) nEl.innerText = (unclaimedOut - unclaimedIn).toFixed(2);
+        const oEl = document.getElementById('pettyOutTotal');[cite: 2]
+        const iEl = document.getElementById('pettyInTotal');[cite: 2]
+        const nEl = document.getElementById('pettyNetClaim');[cite: 2]
+        if (oEl) oEl.innerText = outTotal.toFixed(2);[cite: 2]
+        if (iEl) iEl.innerText = inTotal.toFixed(2);[cite: 2]
+        if (nEl) nEl.innerText = (unclaimedOut - unclaimedIn).toFixed(2);[cite: 2]
 
-        const months = Object.keys(pettyGroups).sort().reverse();
+        const months = Object.keys(pettyGroups).sort().reverse();[cite: 2]
         if (months.length === 0) {
-            container.innerHTML = '<div class="text-xs text-slate-400 py-4 text-center">暂无现金收支流水</div>';
+            container.innerHTML = '<div class="text-xs text-slate-400 py-4 text-center">暂无现金收支流水</div>';[cite: 2]
             return;
         }
 
         months.forEach((mKey, idx) => {
-            const list = pettyGroups[mKey];
-            const groupDiv = document.createElement('div');
-            groupDiv.className = "border border-slate-200 rounded-xl overflow-hidden bg-white";
+            const list = pettyGroups[mKey];[cite: 2]
+            const groupDiv = document.createElement('div');[cite: 2]
+            groupDiv.className = "border border-slate-200 rounded-xl overflow-hidden bg-white";[cite: 2]
 
-            const isFirst = idx === 0;
+            const isFirst = idx === 0;[cite: 2]
             groupDiv.innerHTML = `
                 <button type="button" onclick="toggleGroupBody('petty-group-${mKey}')" class="w-full px-3 py-2 bg-slate-50 hover:bg-slate-100 flex items-center justify-between text-xs font-bold text-slate-800 cursor-pointer">
                     <span>📅 ${mKey} 备用金收支 (${list.length} 笔)</span>
                     <span class="text-slate-400">点击折叠 / 展开 ▾</span>
                 </button>
                 <div id="petty-group-${mKey}" class="${isFirst ? '' : 'hidden'} divide-y divide-slate-100 p-1.5 space-y-1"></div>
-            `;
-            container.appendChild(groupDiv);
+            `;[cite: 2]
+            container.appendChild(groupDiv);[cite: 2]
 
-            const bodyDiv = groupDiv.querySelector(`#petty-group-${mKey}`);
+            const bodyDiv = groupDiv.querySelector(`#petty-group-${mKey}`);[cite: 2]
             list.forEach(item => {
-                const isOut = item.trans_type === 'OUT';
-                let claimHtml = '';
-                if (item.is_claimed) {
-                    claimHtml = `<span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-200">✅ PV: ${escapeHtml(item.pv_number)}</span>`;
+                const isOut = item.trans_type === 'OUT';[cite: 2]
+                let claimHtml = '';[cite: 2]
+                if (item.is_claimed) {[cite: 2]
+                    claimHtml = `<span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-200">✅ PV: ${escapeHtml(item.pv_number)}</span>`;[cite: 2]
                 } else {
-                    claimHtml = `<button onclick="openClaimModal('petty', ${item.id})" class="px-2 py-0.5 bg-amber-500 hover:bg-amber-600 text-white font-bold rounded text-[10px] cursor-pointer">📌 书记 Claim</button>`;
+                    claimHtml = `<button onclick="openClaimModal('petty', ${item.id})" class="px-2 py-0.5 bg-amber-500 hover:bg-amber-600 text-white font-bold rounded text-[10px] cursor-pointer">📌 书记 Claim</button>`;[cite: 2]
                 }
 
-                const row = document.createElement('div');
-                row.className = "p-2 bg-white rounded-lg border border-slate-100 flex items-center justify-between gap-1.5 text-xs";
+                const row = document.createElement('div');[cite: 2]
+                row.className = "p-2 bg-white rounded-lg border border-slate-100 flex items-center justify-between gap-1.5 text-xs";[cite: 2]
                 row.innerHTML = `
                     <div>
                         <div class="flex items-center gap-1.5 flex-wrap">
@@ -1813,40 +1820,40 @@
                         </span>
                         <button onclick="deletePettyCash(${item.id})" class="text-rose-400 hover:text-rose-600 font-bold cursor-pointer">✕</button>
                     </div>
-                `;
-                bodyDiv.appendChild(row);
+                `;[cite: 2]
+                bodyDiv.appendChild(row);[cite: 2]
             });
         });
     }
 
     async function deletePettyCash(id) {
-        if (!confirm('确定删除该笔收支？')) return;
-        await fetch(`${SUPABASE_URL}/marco_petty_cash?id=eq.${id}`, { method: "DELETE", headers: reqHeaders });
-        await fetchPettyCash();
-        renderPettyCashGroups();
+        if (!confirm('确定删除该笔收支？')) return;[cite: 2]
+        await fetch(`${SUPABASE_URL}/marco_petty_cash?id=eq.${id}`, { method: "DELETE", headers: reqHeaders });[cite: 2]
+        await fetchPettyCash();[cite: 2]
+        renderPettyCashGroups();[cite: 2]
     }
 
     // ==============================================================
     // 6. Claim PV 弹窗
     // ==============================================================
     function openClaimModal(targetType, id) {
-        document.getElementById('claimTargetType').value = targetType;
-        document.getElementById('claimTargetId').value = id;
-        document.getElementById('claimPvInput').value = '';
-        document.getElementById('claimPvModal').classList.remove('hidden');
-        document.getElementById('claimPvInput').focus();
+        document.getElementById('claimTargetType').value = targetType;[cite: 2]
+        document.getElementById('claimTargetId').value = id;[cite: 2]
+        document.getElementById('claimPvInput').value = '';[cite: 2]
+        document.getElementById('claimPvModal').classList.remove('hidden');[cite: 2]
+        document.getElementById('claimPvInput').focus();[cite: 2]
     }
 
     function closeClaimPvModal() {
-        document.getElementById('claimPvModal').classList.add('hidden');
+        document.getElementById('claimPvModal').classList.add('hidden');[cite: 2]
     }
 
     async function submitClaimPv() {
-        const targetType = document.getElementById('claimTargetType').value;
-        const id = document.getElementById('claimTargetId').value;
-        const pv = document.getElementById('claimPvInput').value.trim();
+        const targetType = document.getElementById('claimTargetType').value;[cite: 2]
+        const id = document.getElementById('claimTargetId').value;[cite: 2]
+        const pv = document.getElementById('claimPvInput').value.trim();[cite: 2]
 
-        if (!pv) return alert("必须填写公司 PV 凭证编号，才能完成核销！");
+        if (!pv) return alert("必须填写公司 PV 凭证编号，才能完成核销！");[cite: 2]
 
         if (targetType === 'subcon') {
             await fetch(`${SUPABASE_URL}/subcon_payments?id=eq.${id}`, {
@@ -1854,20 +1861,20 @@
                 headers: reqHeaders,
                 body: JSON.stringify({ is_claimed: true, claimed_pv: pv })
             });
-            await fetchSubconData();
-            renderSubconDashboard();
+            await fetchSubconData();[cite: 2]
+            renderSubconDashboard();[cite: 2]
         } else {
             await fetch(`${SUPABASE_URL}/marco_petty_cash?id=eq.${id}`, {
                 method: "PATCH",
                 headers: reqHeaders,
                 body: JSON.stringify({ is_claimed: true, pv_number: pv, claimed_at: new Date().toISOString() })
             });
-            await fetchPettyCash();
-            renderPettyCashGroups();
+            await fetchPettyCash();[cite: 2]
+            renderPettyCashGroups();[cite: 2]
         }
 
-        closeClaimPvModal();
-        alert(`✅ 报销登记成功！已绑定凭证: ${pv}`);
+        closeClaimPvModal();[cite: 2]
+        alert(`✅ 报销登记成功！已绑定凭证: ${pv}`);[cite: 2]
     }
 
     function escapeHtml(text) {
