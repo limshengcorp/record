@@ -20,42 +20,50 @@
                 <h1 class="text-xl sm:text-2xl font-black tracking-tight text-slate-900 flex items-center gap-2">
                     🏗️ LIM SHENG CONSTRUCTION
                 </h1>
-                <p class="text-xs text-slate-500 mt-0.5">建筑劳务考勤核算 · 工人借支代扣 · Subcon分包款与出账流水管理</p>
+                <p class="text-xs text-slate-500 mt-0.5">工人出勤明细核算 · Subcon 分包垫付流水 · Marco 备用金收支报销</p>
             </div>
             <div class="flex items-center gap-2">
-                <button type="button" onclick="refreshAll()" class="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs sm:text-sm font-semibold rounded-xl transition">
+                <button type="button" onclick="refreshAll()" class="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs sm:text-sm font-semibold rounded-xl transition cursor-pointer">
                     🔄 刷新同步
                 </button>
             </div>
         </div>
 
-        <!-- 标签页导航 -->
-        <div class="flex border-b border-slate-200 gap-1 sm:gap-2">
+        <!-- 四大导航标签页 -->
+        <div class="flex border-b border-slate-200 gap-1 sm:gap-2 overflow-x-auto pb-1">
             <button id="navWorkersBtn" type="button" onclick="switchMainTab('workers')"
-                class="px-3 sm:px-5 py-2.5 text-xs sm:text-sm font-bold border-b-2 border-indigo-600 text-indigo-600 transition flex items-center gap-1.5 cursor-pointer">
-                👷 工人出勤与借支对账
+                class="px-3 sm:px-4 py-2.5 text-xs sm:text-sm font-bold border-b-2 border-indigo-600 text-indigo-600 transition flex items-center gap-1.5 whitespace-nowrap cursor-pointer">
+                👷 出勤打卡与月结
+            </button>
+            <button id="navDailyDetailBtn" type="button" onclick="switchMainTab('dailyDetail')"
+                class="px-3 sm:px-4 py-2.5 text-xs sm:text-sm font-bold border-b-2 border-transparent text-slate-500 hover:text-indigo-600 transition flex items-center gap-1.5 whitespace-nowrap cursor-pointer">
+                📋 工人打卡/借款流水明细
             </button>
             <button id="navSubconBtn" type="button" onclick="switchMainTab('subcon')"
-                class="px-3 sm:px-5 py-2.5 text-xs sm:text-sm font-bold border-b-2 border-transparent text-slate-500 hover:text-indigo-600 transition flex items-center gap-1.5 cursor-pointer">
-                📑 Subcon分包与垫付支出
+                class="px-3 sm:px-4 py-2.5 text-xs sm:text-sm font-bold border-b-2 border-transparent text-slate-500 hover:text-indigo-600 transition flex items-center gap-1.5 whitespace-nowrap cursor-pointer">
+                📑 Subcon 分包与垫付
+            </button>
+            <button id="navPettyCashBtn" type="button" onclick="switchMainTab('pettyCash')"
+                class="px-3 sm:px-4 py-2.5 text-xs sm:text-sm font-bold border-b-2 border-transparent text-slate-500 hover:text-indigo-600 transition flex items-center gap-1.5 whitespace-nowrap cursor-pointer">
+                💼 Marco 现金收支与Claim
             </button>
             <button id="navManageBtn" type="button" onclick="switchMainTab('manage')"
-                class="px-3 sm:px-5 py-2.5 text-xs sm:text-sm font-bold border-b-2 border-transparent text-slate-500 hover:text-indigo-600 transition flex items-center gap-1.5 cursor-pointer">
-                ⚙️ 基础名录管理 (工人/工地)
+                class="px-3 sm:px-4 py-2.5 text-xs sm:text-sm font-bold border-b-2 border-transparent text-slate-500 hover:text-indigo-600 transition flex items-center gap-1.5 whitespace-nowrap cursor-pointer">
+                ⚙️ 名录管理 (工人/工地)
             </button>
         </div>
     </div>
 
     <!-- ============================================================== -->
-    <!-- SECTION 1: 工人出勤、打卡与预支借款                              -->
+    <!-- SECTION 1: 出勤打卡与借款月结                                   -->
     <!-- ============================================================== -->
     <div id="tabWorkers" class="space-y-4 sm:space-y-6">
         
-        <!-- 操作卡片 1: 批量打卡 / 录入工时 (支持一天多工地) -->
+        <!-- 操作卡片 1: 批量打卡 -->
         <div class="bg-white p-4 sm:p-5 rounded-2xl shadow-sm space-y-4">
             <div class="flex items-center justify-between border-b pb-3">
                 <h2 class="text-sm sm:text-base font-bold text-slate-800 flex items-center gap-1.5">
-                    ⏱️ 现场出勤与打卡核算 (可多选工人一键出入)
+                    ⏱️ 现场出勤打卡核算 (支持多工地分段)
                 </h2>
                 <span class="text-xs text-slate-400">8小时算1天日薪，超出按时薪累计</span>
             </div>
@@ -79,7 +87,6 @@
                     </div>
                 </div>
 
-                <!-- 模式 A: 时间范围 -->
                 <div id="modeTimeArea" class="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-slate-50 p-3 rounded-xl border border-slate-200">
                     <div>
                         <label class="block text-xs font-semibold text-slate-600 mb-1">开工时间 (Check-In)</label>
@@ -91,26 +98,29 @@
                     </div>
                 </div>
 
-                <!-- 模式 B: 直接工时 -->
                 <div id="modeHoursArea" class="hidden bg-slate-50 p-3 rounded-xl border border-slate-200">
                     <label class="block text-xs font-semibold text-slate-600 mb-1">在该工地工作时长 (小时)</label>
                     <input type="number" step="0.5" id="attDirectHours" placeholder="例如：4（跑半天）或 9（含加班）" class="w-full px-3 py-2 border rounded-xl text-sm bg-white">
                 </div>
 
-                <!-- 多选工人列表 -->
+                <!-- 多选工人列表 (带全选与取消全选) -->
                 <div>
                     <div class="flex items-center justify-between mb-1.5">
-                        <label class="text-xs font-bold text-slate-700">勾选出勤工人 (可同时多选)：</label>
-                        <button type="button" onclick="selectAllWorkers(true)" class="text-xs text-indigo-600 font-semibold hover:underline">全选</button>
+                        <label class="text-xs font-bold text-slate-700">勾选出勤工人：</label>
+                        <div class="space-x-3 text-xs font-semibold">
+                            <button type="button" onclick="selectAllWorkers(true)" class="text-indigo-600 hover:underline">全选</button>
+                            <span class="text-slate-300">|</span>
+                            <button type="button" onclick="selectAllWorkers(false)" class="text-rose-500 hover:underline">取消全选</button>
+                        </div>
                     </div>
-                    <div id="workerCheckboxList" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 max-h-48 overflow-y-auto p-2 border rounded-xl bg-slate-50">
+                    <div id="workerCheckboxList" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 max-h-56 overflow-y-auto p-2.5 border rounded-xl bg-slate-50">
                         <div class="text-xs text-slate-400 col-span-full py-4 text-center">正在读取工人名单...</div>
                     </div>
                 </div>
 
                 <div>
                     <label class="block text-xs font-semibold text-slate-600 mb-1">施工内容 / 备注</label>
-                    <input type="text" id="attNote" placeholder="例如：上午绑铁、下午灌灰或泥水修补" class="w-full px-3 py-2 border rounded-xl text-sm">
+                    <input type="text" id="attNote" placeholder="例如：上午绑铁、下午灌灰或修补" class="w-full px-3 py-2 border rounded-xl text-sm">
                 </div>
 
                 <button type="submit" id="attSubmitBtn" class="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-sm shadow transition">
@@ -119,7 +129,7 @@
             </form>
         </div>
 
-        <!-- 操作卡片 2: 工人借钱 / 买料代扣 -->
+        <!-- 操作卡片 2: 工人借钱 / 买料代扣 (加 1000 选项) -->
         <div class="bg-white p-4 sm:p-5 rounded-2xl shadow-sm space-y-4">
             <h2 class="text-sm sm:text-base font-bold text-slate-800 border-b pb-3">
                 💵 工人借钱预支与扣款登记
@@ -143,7 +153,6 @@
                     </div>
                 </div>
 
-                <!-- 快捷点击金额 -->
                 <div>
                     <label class="block text-xs font-semibold text-slate-600 mb-1">快捷点击借款数额 (RM)：</label>
                     <div class="flex flex-wrap gap-2">
@@ -152,6 +161,7 @@
                         <button type="button" onclick="setAdvAmount(200)" class="px-3.5 py-1.5 bg-slate-100 hover:bg-amber-100 border border-slate-200 text-xs font-bold rounded-lg">RM 200</button>
                         <button type="button" onclick="setAdvAmount(300)" class="px-3.5 py-1.5 bg-slate-100 hover:bg-amber-100 border border-slate-200 text-xs font-bold rounded-lg">RM 300</button>
                         <button type="button" onclick="setAdvAmount(500)" class="px-3.5 py-1.5 bg-slate-100 hover:bg-amber-100 border border-slate-200 text-xs font-bold rounded-lg">RM 500</button>
+                        <button type="button" onclick="setAdvAmount(1000)" class="px-3.5 py-1.5 bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold rounded-lg shadow-sm">RM 1000</button>
                     </div>
                 </div>
 
@@ -187,13 +197,12 @@
                 </div>
             </div>
 
-            <!-- 电脑端表格 -->
             <div class="hidden md:block overflow-x-auto">
                 <table class="w-full text-left border-collapse text-xs sm:text-sm">
                     <thead>
                         <tr class="bg-slate-50 text-slate-500 font-semibold border-b">
                             <th class="p-3">工人姓名</th>
-                            <th class="p-3">IC / Passport</th>
+                            <th class="p-3">工种类型</th>
                             <th class="p-3">日薪标准</th>
                             <th class="p-3">当月累计工时</th>
                             <th class="p-3">应发工钱 (Gross)</th>
@@ -201,58 +210,137 @@
                             <th class="p-3 font-bold text-indigo-900">实发净额 (Net Pay)</th>
                         </tr>
                     </thead>
-                    <tbody id="workerMonthlyBody" class="divide-y divide-slate-100">
-                        <tr><td colspan="7" class="p-6 text-center text-slate-400">正在统计月度数据...</td></tr>
-                    </tbody>
+                    <tbody id="workerMonthlyBody" class="divide-y divide-slate-100"></tbody>
                 </table>
             </div>
 
-            <!-- 手机端卡片 -->
             <div id="workerMonthlyCards" class="block md:hidden space-y-2"></div>
         </div>
 
     </div>
 
     <!-- ============================================================== -->
-    <!-- SECTION 2: Subcon 分包工程款与垫付支出流水                      -->
+    <!-- SECTION 2: 全量打卡/借款明细表 (关联绑定，几号在哪做工一目了然)     -->
+    <!-- ============================================================== -->
+    <div id="tabDailyDetail" class="space-y-4 sm:space-y-6 hidden">
+        <div class="bg-white rounded-2xl shadow-sm p-4 sm:p-5 space-y-4">
+            <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-3 border-b pb-3">
+                <div>
+                    <h2 class="text-base font-bold text-slate-900">📋 工人每日考勤与借支全量明细</h2>
+                    <p class="text-xs text-slate-500">追踪每个工人每天在哪个工地、工时、当日算薪与具体借款记录</p>
+                </div>
+                <div class="flex flex-wrap items-center gap-2">
+                    <select id="detailWorkerFilter" onchange="renderDailyDetailTable()" class="px-3 py-1.5 border rounded-xl text-xs bg-white">
+                        <option value="">全部工人</option>
+                    </select>
+                    <select id="detailSiteFilter" onchange="renderDailyDetailTable()" class="px-3 py-1.5 border rounded-xl text-xs bg-white">
+                        <option value="">全部工地</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- 出勤每日流水表 -->
+            <div class="space-y-2">
+                <h3 class="text-xs font-bold text-indigo-900 uppercase">工人工时出勤流水 (已按日期排序)</h3>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse text-xs sm:text-sm">
+                        <thead>
+                            <tr class="bg-slate-50 text-slate-500 font-semibold border-b">
+                                <th class="p-2.5">日期</th>
+                                <th class="p-2.5">工人姓名</th>
+                                <th class="p-2.5">施工工地</th>
+                                <th class="p-2.5">工时 (h)</th>
+                                <th class="p-2.5">当日算薪 (RM)</th>
+                                <th class="p-2.5">现场备注</th>
+                                <th class="p-2.5 text-right">操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="dailyAttendanceDetailBody" class="divide-y divide-slate-100"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- 借款每日流水表 -->
+            <div class="space-y-2 pt-4 border-t">
+                <h3 class="text-xs font-bold text-amber-900 uppercase">工人预支借钱 / 代扣明细</h3>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse text-xs sm:text-sm">
+                        <thead>
+                            <tr class="bg-amber-50/50 text-slate-600 font-semibold border-b">
+                                <th class="p-2.5">借支日期</th>
+                                <th class="p-2.5">借款工人</th>
+                                <th class="p-2.5">款项类型</th>
+                                <th class="p-2.5 text-amber-700">金额 (RM)</th>
+                                <th class="p-2.5">原因/备注</th>
+                                <th class="p-2.5 text-right">操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="dailyAdvanceDetailBody" class="divide-y divide-slate-100"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================================== -->
+    <!-- SECTION 3: Subcon 分包与垫付管理 (含垫付人、Claim、Advance快捷)   -->
     <!-- ============================================================== -->
     <div id="tabSubcon" class="space-y-4 sm:space-y-6 hidden">
 
-        <!-- 登记新分包项目 -->
+        <!-- 统计面板 -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div class="bg-white p-4 rounded-xl shadow-sm border-l-4 border-indigo-500">
+                <div class="text-xs text-slate-500">本月 Marco/私人垫付总计</div>
+                <div class="text-xl font-black text-indigo-900 mt-1">RM <span id="subconPrivateTotal">0.00</span></div>
+                <div class="text-[10px] text-amber-600 mt-0.5" id="subconUnclaimedTotal">待公司 Claim: RM 0.00</div>
+            </div>
+            <div class="bg-white p-4 rounded-xl shadow-sm border-l-4 border-emerald-500">
+                <div class="text-xs text-slate-500">本月公司直接转账出账</div>
+                <div class="text-xl font-black text-emerald-800 mt-1">RM <span id="subconCompanyTotal">0.00</span></div>
+                <div class="text-[10px] text-slate-400 mt-0.5">公账直接转给 Subcon</div>
+            </div>
+            <div class="bg-white p-4 rounded-xl shadow-sm border-l-4 border-slate-600">
+                <div class="text-xs text-slate-500">分包合同与 VO 总规模</div>
+                <div class="text-xl font-black text-slate-800 mt-1">RM <span id="subconAllContractsTotal">0.00</span></div>
+                <div class="text-[10px] text-slate-400 mt-0.5">所有活跃分包合同总额</div>
+            </div>
+        </div>
+
+        <!-- 建立合同 -->
         <div class="bg-white p-4 sm:p-5 rounded-2xl shadow-sm space-y-3">
             <h2 class="text-sm sm:text-base font-bold text-slate-800 border-b pb-2.5">➕ 建立 Subcon 分包工程合同</h2>
             <form onsubmit="handleNewSubconSubmit(event)" class="grid grid-cols-1 sm:grid-cols-4 gap-3">
                 <div>
                     <label class="block text-xs font-semibold text-slate-600 mb-1">工程项目名称</label>
-                    <input type="text" id="subProjectName" required placeholder="如: Kamunting 仓库铁工" class="w-full px-3 py-2 border rounded-xl text-sm">
+                    <input type="text" id="subProjectName" required placeholder="如: Kamunting 厂房铁工" class="w-full px-3 py-2 border rounded-xl text-sm">
                 </div>
                 <div>
                     <label class="block text-xs font-semibold text-slate-600 mb-1">Subcon 名字 / 公司</label>
-                    <input type="text" id="subSubconName" required placeholder="如: 阿强水喉 / 顺达泥水" class="w-full px-3 py-2 border rounded-xl text-sm">
+                    <input type="text" id="subSubconName" required placeholder="如: xx Ent / Name" class="w-full px-3 py-2 border rounded-xl text-sm">
                 </div>
                 <div>
-                    <label class="block text-xs font-semibold text-slate-600 mb-1">原始合同承包总额 (RM)</label>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">原始合同总额 (RM)</label>
                     <input type="number" step="0.01" id="subBaseAmount" required placeholder="0.00" class="w-full px-3 py-2 border rounded-xl text-sm font-bold text-indigo-700">
                 </div>
                 <div class="flex items-end">
-                    <button type="submit" class="w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-sm shadow">
+                    <button type="submit" class="w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-sm shadow cursor-pointer">
                         建立分包合同
                     </button>
                 </div>
             </form>
         </div>
 
-        <!-- 录入 Subcon 提款 / 垫付记录 -->
+        <!-- 支出与先拿钱登记 -->
         <div class="bg-white p-4 sm:p-5 rounded-2xl shadow-sm space-y-3">
             <h2 class="text-sm sm:text-base font-bold text-slate-800 border-b pb-2.5">💳 Subcon 先拿钱 / 进度款支出登记</h2>
             <form onsubmit="handleSubconPaymentSubmit(event)" class="space-y-3">
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
                     <div>
-                        <label class="block text-xs font-semibold text-slate-600 mb-1">所属分包项目</label>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">所属分包工程</label>
                         <select id="payContractSelect" required class="w-full px-3 py-2 border rounded-xl text-sm bg-white font-semibold text-slate-800"></select>
                     </div>
                     <div>
-                        <label class="block text-xs font-semibold text-slate-600 mb-1">出账时间 (精确到分)</label>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">出账时间</label>
                         <input type="datetime-local" id="payDateTime" required class="w-full px-3 py-2 border rounded-xl text-sm bg-white">
                     </div>
                     <div>
@@ -263,58 +351,180 @@
 
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 bg-slate-50 p-3 rounded-xl border border-slate-200">
                     <div>
-                        <label class="block text-xs font-semibold text-slate-600 mb-1">出账主体</label>
-                        <select id="payPaidBy" onchange="togglePaymentSource()" class="w-full px-3 py-2 border rounded-xl text-sm bg-white font-bold">
-                            <option value="私人先给">私人先垫付 (私人款)</option>
-                            <option value="公司转账">公司直接支出 (公司账)</option>
-                        </select>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">出账性质与经手人</label>
+                        <div class="flex gap-2">
+                            <select id="payPaidBy" onchange="togglePaymentSource()" class="w-1/2 px-2 py-2 border rounded-xl text-xs bg-white font-bold">
+                                <option value="私人先给">私人先垫付</option>
+                                <option value="公司转账">公司转账</option>
+                            </select>
+                            <input type="text" id="payPayerName" value="Marco" placeholder="垫付人名字" class="w-1/2 px-2 py-2 border rounded-xl text-xs bg-white font-semibold">
+                        </div>
                     </div>
                     <div>
-                        <label class="block text-xs font-semibold text-slate-600 mb-1">具体支付方式 / 银行渠道</label>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">具体支付渠道</label>
                         <select id="payMethod" class="w-full px-3 py-2 border rounded-xl text-sm bg-white font-semibold">
                             <option value="CASH">💵 现金 (CASH)</option>
                             <option value="TNG">📱 Touch 'n Go eWallet</option>
                             <option value="HLB">🏦 Hong Leong Bank (HLB)</option>
                             <option value="HSBC">🏦 HSBC Bank</option>
-                            <option value="公司银行户口">🏢 公司主银行户口转账</option>
                         </select>
                     </div>
                     <div>
-                        <label class="block text-xs font-semibold text-slate-600 mb-1">拿钱用途 / 备注</label>
-                        <input type="text" id="payNote" placeholder="例如：买料垫付、给工人发周薪" class="w-full px-3 py-2 border rounded-xl text-sm bg-white">
+                        <div class="flex items-center justify-between mb-1">
+                            <label class="text-xs font-semibold text-slate-600">备注说明</label>
+                            <button type="button" onclick="setSubconNoteAdvance()" class="text-[10px] bg-amber-100 hover:bg-amber-200 text-amber-800 font-bold px-2 py-0.5 rounded">
+                                + 快捷填入 "Advance"
+                            </button>
+                        </div>
+                        <input type="text" id="payNote" placeholder="例如：Advance、买铁网尾款等" class="w-full px-3 py-2 border rounded-xl text-sm bg-white">
                     </div>
                 </div>
 
                 <div class="flex justify-end pt-1">
-                    <button type="submit" class="w-full sm:w-56 py-2.5 bg-rose-600 hover:bg-rose-700 text-white font-bold rounded-xl text-sm shadow">
-                        💸 确认支出并扣减合同
+                    <button type="submit" class="w-full sm:w-56 py-2.5 bg-rose-600 hover:bg-rose-700 text-white font-bold rounded-xl text-sm shadow cursor-pointer">
+                        💸 确认出账并同步扣减
                     </button>
                 </div>
             </form>
         </div>
 
-        <!-- Subcon 账目与对账明细看板 -->
-        <div class="bg-white rounded-2xl shadow-sm overflow-hidden p-4 sm:p-5 space-y-4">
-            <h3 class="font-bold text-slate-900 text-sm sm:text-base border-b pb-2">📋 Subcon 工程对账单 (含合同、VO与尾款结余)</h3>
-            <div id="subconCardsContainer" class="space-y-4">
-                <div class="text-xs text-slate-400 text-center py-6">正在加载分包数据...</div>
+        <!-- 对账看板与修改编辑 -->
+        <div class="bg-white rounded-2xl shadow-sm p-4 sm:p-5 space-y-4">
+            <h3 class="font-bold text-slate-900 text-sm sm:text-base border-b pb-2">📋 Subcon 工程对账单与领款清单 (支持修改编辑)</h3>
+            <div id="subconCardsContainer" class="space-y-4"></div>
+        </div>
+
+    </div>
+
+    <!-- ============================================================== -->
+    <!-- SECTION 4: Marco 现金收支与 Claim 备用金模块 (IN & OUT)           -->
+    <!-- ============================================================== -->
+    <div id="tabPettyCash" class="space-y-4 sm:space-y-6 hidden">
+        
+        <!-- Marco 备用金总结算面板 -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div class="bg-gradient-to-br from-rose-500 to-rose-700 text-white p-4 rounded-xl shadow-sm">
+                <div class="text-xs opacity-80 uppercase font-semibold">Marco 垫付总额 (OUT)</div>
+                <div class="text-2xl font-black mt-1">RM <span id="pettyOutTotal">0.00</span></div>
+                <div class="text-[11px] mt-0.5 opacity-90">买料、维修、安装等零碎垫付</div>
+            </div>
+            <div class="bg-gradient-to-br from-emerald-600 to-teal-700 text-white p-4 rounded-xl shadow-sm">
+                <div class="text-xs opacity-80 uppercase font-semibold">工地现场收现总额 (IN)</div>
+                <div class="text-2xl font-black mt-1">RM <span id="pettyInTotal">0.00</span></div>
+                <div class="text-[11px] mt-0.5 opacity-90">卖废铁、退押金等现场收现</div>
+            </div>
+            <div class="bg-gradient-to-br from-indigo-700 to-slate-900 text-white p-4 rounded-xl shadow-sm">
+                <div class="text-xs opacity-80 uppercase font-semibold">公司当前应退还 Marco 净额</div>
+                <div class="text-2xl font-black mt-1">RM <span id="pettyNetClaim">0.00</span></div>
+                <div class="text-[11px] mt-0.5 opacity-90">待书记报销总额 (未 Claim 净额)</div>
+            </div>
+        </div>
+
+        <!-- 记一笔 (支出 / 收款) -->
+        <div class="bg-white p-4 sm:p-5 rounded-2xl shadow-sm space-y-4">
+            <h2 class="text-base font-bold text-slate-900 border-b pb-2.5">✍️ 记录现金流水 (买料/维修垫付 或 工地收现)</h2>
+            <form onsubmit="handlePettyCashSubmit(event)" class="space-y-3">
+                <div class="grid grid-cols-1 sm:grid-cols-4 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">交易类型</label>
+                        <select id="pettyTransType" onchange="togglePettyCategory()" class="w-full px-3 py-2 border rounded-xl text-sm font-bold bg-white">
+                            <option value="OUT">🔴 OUT - Marco 私人垫付花钱 (等Claim)</option>
+                            <option value="IN">🟢 IN - 收到工地现金 (如卖废铁等)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">发生日期</label>
+                        <input type="date" id="pettyDate" required class="w-full px-3 py-2 border rounded-xl text-sm bg-white">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">发生时间</label>
+                        <input type="time" id="pettyTime" required class="w-full px-3 py-2 border rounded-xl text-sm bg-white">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">金额 (RM)</label>
+                        <input type="number" step="0.01" id="pettyAmount" required placeholder="0.00" class="w-full px-3 py-2 border rounded-xl text-sm font-black text-indigo-700">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">分类</label>
+                        <select id="pettyCategory" class="w-full px-3 py-2 border rounded-xl text-sm bg-white font-medium">
+                            <option value="买料/工具">买料 / 现场五金工具</option>
+                            <option value="维修/安装">机械维修 / 安装费</option>
+                            <option value="工人杂支">现场杂支 / 伙食水钱</option>
+                            <option value="卖废铁现金">卖工地废铁/旧料 (收入)</option>
+                            <option value="其他">其他款项</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">单据号 / 发票号 (选填)</label>
+                        <input type="text" id="pettyReceiptNo" placeholder="如: Inv-9921、Cash Bill 018" class="w-full px-3 py-2 border rounded-xl text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">具体内容原因 (买什么/收什么钱)</label>
+                        <input type="text" id="pettyDescription" required placeholder="例如：买铁线两捆、吊车补胎、卖废钢筋收现" class="w-full px-3 py-2 border rounded-xl text-sm">
+                    </div>
+                </div>
+
+                <div class="flex justify-end pt-1">
+                    <button type="submit" class="w-full sm:w-56 py-2.5 bg-slate-900 hover:bg-black text-white font-bold rounded-xl text-sm shadow cursor-pointer">
+                        📥 记入 Marco 备用金账本
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- 备用金流水表与书记 Claim 功能 -->
+        <div class="bg-white rounded-2xl shadow-sm p-4 sm:p-5 space-y-4">
+            <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-2 border-b pb-3">
+                <div>
+                    <h3 class="font-bold text-slate-900 text-sm sm:text-base">📑 Marco 现金流水账本 (书记查账与核销 Claim 专用)</h3>
+                    <p class="text-xs text-slate-500">公司出钱报销后，书记点击“确认 Claimed”并填入对应 Payment Voucher (PV) 编号</p>
+                </div>
+            </div>
+
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse text-xs sm:text-sm">
+                    <thead>
+                        <tr class="bg-slate-50 text-slate-500 font-semibold border-b">
+                            <th class="p-2.5">日期时间</th>
+                            <th class="p-2.5">类型</th>
+                            <th class="p-2.5">分类</th>
+                            <th class="p-2.5">内容原因</th>
+                            <th class="p-2.5">单据号</th>
+                            <th class="p-2.5">金额 (RM)</th>
+                            <th class="p-2.5">报销状态 (PV Number)</th>
+                            <th class="p-2.5 text-right">操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="pettyCashTableBody" class="divide-y divide-slate-100"></tbody>
+                </table>
             </div>
         </div>
 
     </div>
 
     <!-- ============================================================== -->
-    <!-- SECTION 3: 基础档案设置 (预先注册工人与工地)                     -->
+    <!-- SECTION 5: 基础名录管理 (含管理密码 2321、修改与软删除保护)       -->
     <!-- ============================================================== -->
     <div id="tabManage" class="space-y-4 sm:space-y-6 hidden">
         
         <!-- 预设工人名单 -->
         <div class="bg-white p-4 sm:p-5 rounded-2xl shadow-sm space-y-3">
-            <h2 class="text-sm sm:text-base font-bold text-slate-800 border-b pb-2.5">👤 预先注册工人档案</h2>
-            <form onsubmit="handleNewWorkerSubmit(event)" class="grid grid-cols-1 sm:grid-cols-4 gap-3">
+            <h2 class="text-sm sm:text-base font-bold text-slate-800 border-b pb-2.5">👤 预先注册工人档案 (带工种类型)</h2>
+            <form onsubmit="handleNewWorkerSubmit(event)" class="grid grid-cols-1 sm:grid-cols-5 gap-3">
                 <div>
                     <label class="block text-xs font-semibold text-slate-600 mb-1">工人全名</label>
-                    <input type="text" id="workerName" required placeholder="如: Ali" class="w-full px-3 py-2 border rounded-xl text-sm">
+                    <input type="text" id="workerName" required placeholder="输入员工姓名" class="w-full px-3 py-2 border rounded-xl text-sm">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">工人类型 (工种)</label>
+                    <select id="workerType" class="w-full px-3 py-2 border rounded-xl text-sm bg-white font-medium">
+                        <option value="头手">头手 (Master)</option>
+                        <option value="中工">中工 (Skilled)</option>
+                        <option value="杂工">杂工 (General Labor)</option>
+                    </select>
                 </div>
                 <div>
                     <label class="block text-xs font-semibold text-slate-600 mb-1">IC / Passport 号码</label>
@@ -325,11 +535,11 @@
                     <input type="text" id="workerPhone" placeholder="如: 012-3456789" class="w-full px-3 py-2 border rounded-xl text-sm">
                 </div>
                 <div>
-                    <label class="block text-xs font-semibold text-slate-600 mb-1">日薪标准 (8小时/RM)</label>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">日薪标准 (8h/RM)</label>
                     <input type="number" step="0.5" id="workerRate" required placeholder="例如: 100" class="w-full px-3 py-2 border rounded-xl text-sm font-bold text-indigo-700">
                 </div>
-                <div class="sm:col-span-4 flex justify-end">
-                    <button type="submit" class="w-full sm:w-48 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-sm">
+                <div class="sm:col-span-5 flex justify-end">
+                    <button type="submit" class="w-full sm:w-48 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-sm cursor-pointer">
                         ➕ 保存工人资料
                     </button>
                 </div>
@@ -340,10 +550,11 @@
                     <thead>
                         <tr class="bg-slate-50 text-slate-500 font-semibold">
                             <th class="p-2.5">姓名</th>
+                            <th class="p-2.5">类型</th>
                             <th class="p-2.5">证件号码</th>
                             <th class="p-2.5">日薪 (8h)</th>
                             <th class="p-2.5">折算时薪</th>
-                            <th class="p-2.5 text-right">操作</th>
+                            <th class="p-2.5 text-right">管理操作 (需密码2321)</th>
                         </tr>
                     </thead>
                     <tbody id="registeredWorkersBody" class="divide-y divide-slate-100"></tbody>
@@ -351,23 +562,97 @@
             </div>
         </div>
 
-        <!-- 预设工地 -->
+        <!-- 预设工地管理 -->
         <div class="bg-white p-4 sm:p-5 rounded-2xl shadow-sm space-y-3">
-            <h2 class="text-sm sm:text-base font-bold text-slate-800 border-b pb-2.5">🏢 预先添加工地名称</h2>
+            <h2 class="text-sm sm:text-base font-bold text-slate-800 border-b pb-2.5">🏢 预先添加与管理工地名称</h2>
             <form onsubmit="handleNewSiteSubmit(event)" class="flex gap-2">
                 <input type="text" id="newSiteName" required placeholder="输入新工地名，如: Kamunting 新厂房B区" class="flex-1 px-3 py-2 border rounded-xl text-sm">
-                <button type="submit" class="px-5 py-2 bg-slate-800 hover:bg-black text-white font-bold rounded-xl text-sm">
+                <button type="submit" class="px-5 py-2 bg-slate-800 hover:bg-black text-white font-bold rounded-xl text-sm cursor-pointer">
                     添加工地
                 </button>
             </form>
-            <div id="siteTagsArea" class="flex flex-wrap gap-2 pt-2"></div>
+            <div id="siteTagsArea" class="space-y-2 pt-2"></div>
         </div>
 
     </div>
 
 </div>
 
-<!-- VO (追加款) 模态弹窗 -->
+<!-- 弹窗 1: 编辑工人资料 (密码 2321 校验) -->
+<div id="editWorkerModal" class="hidden fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-xl max-w-md w-full p-5 space-y-3">
+        <h3 class="text-base font-bold text-slate-900 border-b pb-2">✏️ 修改员工档案 (管理模式)</h3>
+        <input type="hidden" id="editWorkerId">
+        <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">工人全名</label>
+            <input type="text" id="editWorkerName" class="w-full px-3 py-2 border rounded-xl text-sm">
+        </div>
+        <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">工人类型</label>
+            <select id="editWorkerType" class="w-full px-3 py-2 border rounded-xl text-sm bg-white">
+                <option value="头手">头手 (Master)</option>
+                <option value="中工">中工 (Skilled)</option>
+                <option value="杂工">杂工 (General Labor)</option>
+            </select>
+        </div>
+        <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">IC / Passport</label>
+            <input type="text" id="editWorkerIc" class="w-full px-3 py-2 border rounded-xl text-sm">
+        </div>
+        <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">日薪标准 (RM)</label>
+            <input type="number" step="0.5" id="editWorkerRate" class="w-full px-3 py-2 border rounded-xl text-sm font-bold text-indigo-700">
+        </div>
+        <div class="flex justify-end gap-2 pt-2 border-t">
+            <button type="button" onclick="closeEditWorkerModal()" class="px-4 py-2 bg-slate-100 rounded-xl text-xs font-semibold">取消</button>
+            <button type="button" onclick="submitEditWorker()" class="px-4 py-2 bg-indigo-600 text-white rounded-xl text-xs font-bold">保存更新</button>
+        </div>
+    </div>
+</div>
+
+<!-- 弹窗 2: Subcon 合同编辑修改 -->
+<div id="editSubconContractModal" class="hidden fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-xl max-w-md w-full p-5 space-y-3">
+        <h3 class="text-base font-bold text-slate-900 border-b pb-2">✏️ 修改分包工程合同</h3>
+        <input type="hidden" id="editSubContractId">
+        <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">工程项目名称</label>
+            <input type="text" id="editSubProjectName" class="w-full px-3 py-2 border rounded-xl text-sm">
+        </div>
+        <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Subcon 名字</label>
+            <input type="text" id="editSubSubconName" class="w-full px-3 py-2 border rounded-xl text-sm">
+        </div>
+        <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">原合同承包总额 (RM)</label>
+            <input type="number" step="0.01" id="editSubBaseAmount" class="w-full px-3 py-2 border rounded-xl text-sm font-bold text-indigo-700">
+        </div>
+        <div class="flex justify-end gap-2 pt-2 border-t">
+            <button type="button" onclick="closeEditSubconContractModal()" class="px-4 py-2 bg-slate-100 rounded-xl text-xs font-semibold">取消</button>
+            <button type="button" onclick="submitEditSubconContract()" class="px-4 py-2 bg-indigo-600 text-white rounded-xl text-xs font-bold">保存修改</button>
+        </div>
+    </div>
+</div>
+
+<!-- 弹窗 3: 书记确认 Claimed (强制输入 PV Number) -->
+<div id="claimPvModal" class="hidden fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-xl max-w-sm w-full p-5 space-y-3">
+        <h3 class="text-base font-bold text-slate-900 border-b pb-2">🧾 确认已报销付款 (Claimed)</h3>
+        <input type="hidden" id="claimTargetType"> <!-- 'subcon' or 'petty' -->
+        <input type="hidden" id="claimTargetId">
+        <p class="text-xs text-slate-600">请输入本次出账对应的公司付款单号 (Payment Voucher)：</p>
+        <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">PV 凭证编号 (必填)</label>
+            <input type="text" id="claimPvInput" required placeholder="如: PV2026-09-001" class="w-full px-3 py-2 border rounded-xl text-sm font-mono font-bold">
+        </div>
+        <div class="flex justify-end gap-2 pt-2 border-t">
+            <button type="button" onclick="closeClaimPvModal()" class="px-4 py-2 bg-slate-100 rounded-xl text-xs font-semibold">取消</button>
+            <button type="button" onclick="submitClaimPv()" class="px-4 py-2 bg-emerald-600 text-white rounded-xl text-xs font-bold">确认报销</button>
+        </div>
+    </div>
+</div>
+
+<!-- 弹窗 4: VO 追加款弹窗 -->
 <div id="voModal" class="hidden fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
     <div class="bg-white rounded-2xl shadow-xl max-w-md w-full p-5 space-y-3">
         <h3 class="text-base font-bold text-slate-900 border-b pb-2">➕ 追加 VO 变更工程款</h3>
@@ -393,9 +678,9 @@
 
 <script>
     // ==============================================================
-    // 1. 系统核心配置 (请替换为你的新 Supabase 项目配置)
+    // 1. 系统配置 (直接读取你的真实项目)
     // ==============================================================
-    const SUPABASE_URL = "https://xiplmlalurpnrnzeaywp.supabase.co/rest/v1/";
+    const SUPABASE_URL = "https://xiplmlalurpnrnzeaywp.supabase.co/rest/v1";
     const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhpcGxtbGFsdXJwbnJuemVheXdwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg0Mjk2NjYsImV4cCI6MjEwNDAwNTY2Nn0.uIRTO0MAvQHGzQzdWwWZCufeMsnuU9LQTHUOI60lTXQ";
 
     const reqHeaders = {
@@ -405,7 +690,7 @@
         "Prefer": "return=representation"
     };
 
-    // 内存数据缓存
+    // 内存数据
     let workersList = [];
     let sitesList = [];
     let attendanceList = [];
@@ -413,8 +698,8 @@
     let subconContracts = [];
     let subconPayments = [];
     let subconVos = [];
+    let pettyCashList = [];
 
-    // 初始化当天日期与时间
     function initSystemDates() {
         const now = new Date();
         const y = now.getFullYear();
@@ -426,10 +711,12 @@
         document.getElementById('attWorkDate').value = todayStr;
         document.getElementById('advDate').value = todayStr;
         document.getElementById('filterMonth').value = monthStr;
+        document.getElementById('pettyDate').value = todayStr;
 
         const h = String(now.getHours()).padStart(2, '0');
         const min = String(now.getMinutes()).padStart(2, '0');
         document.getElementById('payDateTime').value = `${todayStr}T${h}:${min}`;
+        document.getElementById('pettyTime').value = `${h}:${min}`;
     }
 
     window.addEventListener('load', () => {
@@ -443,22 +730,25 @@
             fetchSites(),
             fetchAttendance(),
             fetchAdvances(),
-            fetchSubconData()
+            fetchSubconData(),
+            fetchPettyCash()
         ]);
         renderWorkerMonthlySummary();
+        renderDailyDetailTable();
         renderSubconDashboard();
+        renderPettyCashTable();
     }
 
     function switchMainTab(tab) {
-        ['Workers', 'Subcon', 'Manage'].forEach(t => {
+        ['Workers', 'DailyDetail', 'Subcon', 'PettyCash', 'Manage'].forEach(t => {
             const btn = document.getElementById(`nav${t}Btn`);
             const panel = document.getElementById(`tab${t}`);
-            if (t.toLowerCase() === tab) {
+            if (t.toLowerCase() === tab.toLowerCase()) {
                 panel.classList.remove('hidden');
-                btn.className = "px-3 sm:px-5 py-2.5 text-xs sm:text-sm font-bold border-b-2 border-indigo-600 text-indigo-600 transition flex items-center gap-1.5 cursor-pointer";
+                btn.className = "px-3 sm:px-4 py-2.5 text-xs sm:text-sm font-bold border-b-2 border-indigo-600 text-indigo-600 transition flex items-center gap-1.5 whitespace-nowrap cursor-pointer";
             } else {
                 panel.classList.add('hidden');
-                btn.className = "px-3 sm:px-5 py-2.5 text-xs sm:text-sm font-bold border-b-2 border-transparent text-slate-500 hover:text-indigo-600 transition flex items-center gap-1.5 cursor-pointer";
+                btn.className = "px-3 sm:px-4 py-2.5 text-xs sm:text-sm font-bold border-b-2 border-transparent text-slate-500 hover:text-indigo-600 transition flex items-center gap-1.5 whitespace-nowrap cursor-pointer";
             }
         });
     }
@@ -489,8 +779,12 @@
         }
     }
 
+    function setSubconNoteAdvance() {
+        document.getElementById('payNote').value = "Advance";
+    }
+
     // ==============================================================
-    // 2. 基础名录：工人与工地管理
+    // 2. 基础名录 (工人带工种类型、密码 2321 编辑、工地软删除保护)
     // ==============================================================
     async function fetchWorkers() {
         try {
@@ -498,9 +792,7 @@
             workersList = await res.json();
             renderWorkerSelectors();
             renderWorkerAdminTable();
-        } catch (e) {
-            console.error(e);
-        }
+        } catch (e) { console.error(e); }
     }
 
     async function fetchSites() {
@@ -508,17 +800,14 @@
             const res = await fetch(`${SUPABASE_URL}/job_sites?status=eq.active&order=id.asc`, { headers: reqHeaders });
             sitesList = await res.json();
             renderSiteSelectors();
-        } catch (e) {
-            console.error(e);
-        }
+        } catch (e) { console.error(e); }
     }
 
     function renderWorkerSelectors() {
-        // 出勤打卡多选框
         const checkList = document.getElementById('workerCheckboxList');
         checkList.innerHTML = '';
         if (workersList.length === 0) {
-            checkList.innerHTML = '<div class="text-xs text-slate-400 col-span-full py-4 text-center">暂无工人，请先在“基础名录”中录入工人资料</div>';
+            checkList.innerHTML = '<div class="text-xs text-slate-400 col-span-full py-4 text-center">暂无工人，请先在名录中录入</div>';
         } else {
             workersList.forEach(w => {
                 const label = document.createElement('label');
@@ -526,7 +815,7 @@
                 label.innerHTML = `
                     <input type="checkbox" name="selectedWorker" value="${w.id}" class="w-4 h-4 text-indigo-600 rounded">
                     <div>
-                        <div class="font-bold text-slate-800">${escapeHtml(w.name)}</div>
+                        <div class="font-bold text-slate-800">${escapeHtml(w.name)} <span class="text-[10px] text-indigo-600 font-normal">(${escapeHtml(w.worker_type || '中工')})</span></div>
                         <div class="text-[10px] text-slate-400">RM ${Number(w.daily_rate).toFixed(0)}/天 (RM ${Number(w.hourly_rate).toFixed(2)}/h)</div>
                     </div>
                 `;
@@ -534,11 +823,17 @@
             });
         }
 
-        // 借款单一下拉框
         const advSelect = document.getElementById('advWorkerSelect');
         advSelect.innerHTML = '<option value="">-- 请选择借款工人 --</option>';
         workersList.forEach(w => {
-            advSelect.innerHTML += `<option value="${w.id}">${escapeHtml(w.name)} (${w.ic_passport})</option>`;
+            advSelect.innerHTML += `<option value="${w.id}">${escapeHtml(w.name)} (${escapeHtml(w.worker_type || '工人')})</option>`;
+        });
+
+        // 明细表的筛选下拉
+        const detailFilter = document.getElementById('detailWorkerFilter');
+        detailFilter.innerHTML = '<option value="">全部工人</option>';
+        workersList.forEach(w => {
+            detailFilter.innerHTML += `<option value="${w.id}">${escapeHtml(w.name)}</option>`;
         });
     }
 
@@ -548,33 +843,44 @@
 
     function renderSiteSelectors() {
         const siteSelect = document.getElementById('attSiteName');
+        const detailSiteFilter = document.getElementById('detailSiteFilter');
         const tagsArea = document.getElementById('siteTagsArea');
         siteSelect.innerHTML = '';
+        detailSiteFilter.innerHTML = '<option value="">全部工地</option>';
         tagsArea.innerHTML = '';
 
         sitesList.forEach(s => {
             siteSelect.innerHTML += `<option value="${escapeHtml(s.site_name)}">${escapeHtml(s.site_name)}</option>`;
-            tagsArea.innerHTML += `
-                <span class="px-3 py-1 bg-slate-100 border border-slate-200 text-xs font-semibold rounded-lg text-slate-700">
-                    📍 ${escapeHtml(s.site_name)}
-                </span>
+            detailSiteFilter.innerHTML += `<option value="${escapeHtml(s.site_name)}">${escapeHtml(s.site_name)}</option>`;
+            
+            // 可编辑和删除的工地标签
+            const div = document.createElement('div');
+            div.className = "flex items-center justify-between p-2 bg-slate-50 border border-slate-200 rounded-xl text-xs";
+            div.innerHTML = `
+                <span class="font-bold text-slate-800">📍 ${escapeHtml(s.site_name)}</span>
+                <div class="space-x-2">
+                    <button type="button" onclick="editSiteName(${s.id}, '${escapeHtml(s.site_name)}')" class="text-indigo-600 hover:underline">改名</button>
+                    <button type="button" onclick="archiveSite(${s.id})" class="text-rose-500 hover:underline">隐藏/移除</button>
+                </div>
             `;
+            tagsArea.appendChild(div);
         });
     }
 
     async function handleNewWorkerSubmit(e) {
         e.preventDefault();
         const name = document.getElementById('workerName').value.trim();
+        const worker_type = document.getElementById('workerType').value;
         const ic_passport = document.getElementById('workerIc').value.trim();
         const phone = document.getElementById('workerPhone').value.trim();
         const daily_rate = parseFloat(document.getElementById('workerRate').value);
-        const hourly_rate = +(daily_rate / 8).toFixed(2); // 8小时基准自动换算
+        const hourly_rate = +(daily_rate / 8).toFixed(2);
 
         try {
             const res = await fetch(`${SUPABASE_URL}/workers`, {
                 method: "POST",
                 headers: reqHeaders,
-                body: JSON.stringify([{ name, ic_passport, phone, daily_rate, hourly_rate }])
+                body: JSON.stringify([{ name, worker_type, ic_passport, phone, daily_rate, hourly_rate }])
             });
             if (!res.ok) throw new Error("保存工人失败");
             document.getElementById('workerName').value = '';
@@ -582,27 +888,8 @@
             document.getElementById('workerPhone').value = '';
             document.getElementById('workerRate').value = '';
             await fetchWorkers();
-            alert(`工人 [${name}] 已成功注册入库！`);
-        } catch (err) {
-            alert(err.message);
-        }
-    }
-
-    async function handleNewSiteSubmit(e) {
-        e.preventDefault();
-        const site_name = document.getElementById('newSiteName').value.trim();
-        try {
-            const res = await fetch(`${SUPABASE_URL}/job_sites`, {
-                method: "POST",
-                headers: reqHeaders,
-                body: JSON.stringify([{ site_name }])
-            });
-            if (!res.ok) throw new Error("工地可能已存在");
-            document.getElementById('newSiteName').value = '';
-            await fetchSites();
-        } catch (err) {
-            alert(err.message);
-        }
+            alert(`员工 [${name}] 已成功录入！`);
+        } catch (err) { alert(err.message); }
     }
 
     function renderWorkerAdminTable() {
@@ -612,42 +899,119 @@
             tbody.innerHTML += `
                 <tr class="hover:bg-slate-50">
                     <td class="p-2.5 font-bold text-slate-800">${escapeHtml(w.name)}</td>
-                    <td class="p-2.5 text-slate-500 font-mono">${escapeHtml(w.ic_passport)}</td>
+                    <td class="p-2.5"><span class="px-2 py-0.5 rounded text-[11px] font-bold bg-indigo-50 text-indigo-700">${escapeHtml(w.worker_type || '中工')}</span></td>
+                    <td class="p-2.5 text-slate-500 font-mono text-xs">${escapeHtml(w.ic_passport)}</td>
                     <td class="p-2.5 font-semibold text-indigo-700">RM ${Number(w.daily_rate).toFixed(2)}</td>
                     <td class="p-2.5 text-slate-600 font-mono">RM ${Number(w.hourly_rate).toFixed(2)}/h</td>
-                    <td class="p-2.5 text-right">
-                        <button onclick="deleteWorker(${w.id})" class="text-rose-500 hover:underline">删除</button>
+                    <td class="p-2.5 text-right space-x-2">
+                        <button onclick="openEditWorkerModal(${w.id})" class="text-indigo-600 hover:underline">编辑</button>
+                        <button onclick="archiveWorker(${w.id})" class="text-rose-500 hover:underline">注销</button>
                     </td>
                 </tr>
             `;
         });
     }
 
-    async function deleteWorker(id) {
-        if (!confirm('确定注销该工人？相关打卡数据将被彻底清理。')) return;
-        await fetch(`${SUPABASE_URL}/workers?id=eq.${id}`, { method: "DELETE", headers: reqHeaders });
+    // 员工编辑 (校验密码 2321)
+    function openEditWorkerModal(id) {
+        const pwd = prompt("请输入管理编辑密码：");
+        if (pwd !== "2321") return alert("❌ 密码错误，无权限编辑员工信息！");
+
+        const w = workersList.find(item => item.id === id);
+        if (!w) return;
+
+        document.getElementById('editWorkerId').value = w.id;
+        document.getElementById('editWorkerName').value = w.name;
+        document.getElementById('editWorkerType').value = w.worker_type || '中工';
+        document.getElementById('editWorkerIc').value = w.ic_passport;
+        document.getElementById('editWorkerRate').value = w.daily_rate;
+        document.getElementById('editWorkerModal').classList.remove('hidden');
+    }
+
+    function closeEditWorkerModal() {
+        document.getElementById('editWorkerModal').classList.add('hidden');
+    }
+
+    async function submitEditWorker() {
+        const id = document.getElementById('editWorkerId').value;
+        const name = document.getElementById('editWorkerName').value.trim();
+        const worker_type = document.getElementById('editWorkerType').value;
+        const ic_passport = document.getElementById('editWorkerIc').value.trim();
+        const daily_rate = parseFloat(document.getElementById('editWorkerRate').value);
+        const hourly_rate = +(daily_rate / 8).toFixed(2);
+
+        if (!name || isNaN(daily_rate)) return alert("请填写完整信息！");
+
+        await fetch(`${SUPABASE_URL}/workers?id=eq.${id}`, {
+            method: "PATCH",
+            headers: reqHeaders,
+            body: JSON.stringify({ name, worker_type, ic_passport, daily_rate, hourly_rate })
+        });
+        closeEditWorkerModal();
+        await fetchWorkers();
+        renderWorkerMonthlySummary();
+        renderDailyDetailTable();
+        alert("员工信息已更新！");
+    }
+
+    async function archiveWorker(id) {
+        if (!confirm('确定将该工人设为停用状态？历史工时与结算数据将完整保留。')) return;
+        await fetch(`${SUPABASE_URL}/workers?id=eq.${id}`, {
+            method: "PATCH",
+            headers: reqHeaders,
+            body: JSON.stringify({ status: 'inactive' })
+        });
         await fetchWorkers();
     }
 
+    // 工地改名与软删除 (不删关联记录)
+    async function handleNewSiteSubmit(e) {
+        e.preventDefault();
+        const site_name = document.getElementById('newSiteName').value.trim();
+        await fetch(`${SUPABASE_URL}/job_sites`, {
+            method: "POST",
+            headers: reqHeaders,
+            body: JSON.stringify([{ site_name, status: 'active' }])
+        });
+        document.getElementById('newSiteName').value = '';
+        await fetchSites();
+    }
+
+    async function editSiteName(id, oldName) {
+        const newName = prompt("请输入修改后的工地名称：", oldName);
+        if (!newName || newName.trim() === oldName) return;
+        await fetch(`${SUPABASE_URL}/job_sites?id=eq.${id}`, {
+            method: "PATCH",
+            headers: reqHeaders,
+            body: JSON.stringify({ site_name: newName.trim() })
+        });
+        await fetchSites();
+    }
+
+    async function archiveSite(id) {
+        if (!confirm('确定隐藏该工地？已记录的历史考勤流水不会受到任何影响。')) return;
+        await fetch(`${SUPABASE_URL}/job_sites?id=eq.${id}`, {
+            method: "PATCH",
+            headers: reqHeaders,
+            body: JSON.stringify({ status: 'archived' })
+        });
+        await fetchSites();
+    }
+
     // ==============================================================
-    // 3. 工人出勤打卡 (批量计算与结算)
+    // 3. 工人出勤打卡与借款入账
     // ==============================================================
     async function fetchAttendance() {
         try {
             const res = await fetch(`${SUPABASE_URL}/attendance_records?order=work_date.desc,id.desc`, { headers: reqHeaders });
             attendanceList = await res.json();
-        } catch (e) {
-            console.error(e);
-        }
+        } catch (e) { console.error(e); }
     }
 
     async function handleAttendanceSubmit(e) {
         e.preventDefault();
         const checkedBoxes = Array.from(document.querySelectorAll('input[name="selectedWorker"]:checked'));
-        if (checkedBoxes.length === 0) {
-            alert('请至少勾选一位出勤工人！');
-            return;
-        }
+        if (checkedBoxes.length === 0) return alert('请勾选出勤工人！');
 
         const work_date = document.getElementById('attWorkDate').value;
         const site_name = document.getElementById('attSiteName').value;
@@ -666,43 +1030,26 @@
 
             const diffMs = new Date(check_out) - new Date(check_in);
             let diffHours = diffMs / (1000 * 60 * 60);
-
-            // 如果跨越中午午休（例如满 8 小时以上，自动扣除 1 小时吃饭休息）
-            if (diffHours >= 8) {
-                diffHours -= 1;
-            }
+            if (diffHours >= 8) diffHours -= 1; // 扣除午饭1小时
             total_hours = diffHours > 0 ? +diffHours.toFixed(2) : 0;
         } else {
             total_hours = parseFloat(document.getElementById('attDirectHours').value);
         }
 
-        if (isNaN(total_hours) || total_hours <= 0) {
-            alert('计算工时无效，请检查打卡时间或输入工时！');
-            return;
-        }
+        if (isNaN(total_hours) || total_hours <= 0) return alert('工时无效，请核对时间！');
 
         const recordsToInsert = checkedBoxes.map(cb => {
             const workerId = parseInt(cb.value);
             const worker = workersList.find(w => w.id === workerId);
             const hourlyRate = worker ? Number(worker.hourly_rate) : 12.5;
-            // 核心公式：工时 * 时薪
             const daily_wage = +(total_hours * hourlyRate).toFixed(2);
 
-            return {
-                work_date,
-                worker_id: workerId,
-                site_name,
-                check_in,
-                check_out,
-                total_hours,
-                daily_wage,
-                note
-            };
+            return { work_date, worker_id: workerId, site_name, check_in, check_out, total_hours, daily_wage, note };
         });
 
         const btn = document.getElementById('attSubmitBtn');
         btn.disabled = true;
-        btn.innerText = '正在批量核算生成中...';
+        btn.innerText = '正在批量录入...';
 
         try {
             const res = await fetch(`${SUPABASE_URL}/attendance_records`, {
@@ -710,31 +1057,26 @@
                 headers: reqHeaders,
                 body: JSON.stringify(recordsToInsert)
             });
-            if (!res.ok) throw new Error("打卡提交失败");
+            if (!res.ok) throw new Error("打卡失败");
 
-            alert(`✅ 批量出勤登记成功！已为 ${recordsToInsert.length} 位工人记录 [${site_name}] 工时：${total_hours} 小时。`);
             selectAllWorkers(false);
             document.getElementById('attNote').value = '';
             await fetchAttendance();
             renderWorkerMonthlySummary();
-        } catch (err) {
-            alert(err.message);
-        } finally {
+            renderDailyDetailTable();
+            alert(`✅ 批量出勤登记成功！共为 ${recordsToInsert.length} 位工人记录工时。`);
+        } catch (err) { alert(err.message); }
+        finally {
             btn.disabled = false;
             btn.innerText = '📝 一键批量生成出勤记录';
         }
     }
 
-    // ==============================================================
-    // 4. 工人借款与代扣
-    // ==============================================================
     async function fetchAdvances() {
         try {
             const res = await fetch(`${SUPABASE_URL}/worker_advances?order=advance_date.desc,id.desc`, { headers: reqHeaders });
             advancesList = await res.json();
-        } catch (e) {
-            console.error(e);
-        }
+        } catch (e) { console.error(e); }
     }
 
     function setAdvAmount(val) {
@@ -749,46 +1091,30 @@
         const amount = parseFloat(document.getElementById('advAmount').value);
         const note = document.getElementById('advNote').value.trim();
 
-        if (!worker_id || isNaN(amount) || amount <= 0) {
-            alert('请完整选择工人及填写正确的金额！');
-            return;
-        }
+        if (!worker_id || isNaN(amount) || amount <= 0) return alert('请选择工人并填写有效金额！');
 
-        try {
-            const res = await fetch(`${SUPABASE_URL}/worker_advances`, {
-                method: "POST",
-                headers: reqHeaders,
-                body: JSON.stringify([{ advance_date, worker_id, amount, advance_type, note }])
-            });
-            if (!res.ok) throw new Error("借款登记失败");
-
-            document.getElementById('advAmount').value = '';
-            document.getElementById('advNote').value = '';
-            await fetchAdvances();
-            renderWorkerMonthlySummary();
-            alert('借款/代扣记录已成功保存！');
-        } catch (err) {
-            alert(err.message);
-        }
+        await fetch(`${SUPABASE_URL}/worker_advances`, {
+            method: "POST",
+            headers: reqHeaders,
+            body: JSON.stringify([{ advance_date, worker_id, amount, advance_type, note }])
+        });
+        document.getElementById('advAmount').value = '';
+        document.getElementById('advNote').value = '';
+        await fetchAdvances();
+        renderWorkerMonthlySummary();
+        renderDailyDetailTable();
+        alert('借款/代扣已成功登记！');
     }
 
-    // ==============================================================
-    // 5. 月度核算大屏 (应发 - 借款 = 净额)
-    // ==============================================================
+    // 月结看板
     function renderWorkerMonthlySummary() {
-        const month = document.getElementById('filterMonth').value; // 'YYYY-MM'
+        const month = document.getElementById('filterMonth').value;
         const tbody = document.getElementById('workerMonthlyBody');
         const cards = document.getElementById('workerMonthlyCards');
         tbody.innerHTML = '';
         cards.innerHTML = '';
 
-        if (workersList.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="7" class="p-6 text-center text-slate-400">暂无工人数据</td></tr>';
-            return;
-        }
-
         workersList.forEach(w => {
-            // 累计当月工时与工钱
             let totalHours = 0;
             let grossPay = 0;
             attendanceList.forEach(att => {
@@ -798,7 +1124,6 @@
                 }
             });
 
-            // 累计当月借钱与扣款
             let totalDeductions = 0;
             advancesList.forEach(adv => {
                 if (adv.worker_id === w.id && (adv.advance_date || '').startsWith(month)) {
@@ -808,13 +1133,12 @@
 
             const netPay = grossPay - totalDeductions;
 
-            // 电脑端行
             tbody.innerHTML += `
-                <tr class="hover:bg-slate-50 transition">
+                <tr class="hover:bg-slate-50">
                     <td class="p-3 font-bold text-slate-900">${escapeHtml(w.name)}</td>
-                    <td class="p-3 text-slate-500 font-mono text-xs">${escapeHtml(w.ic_passport)}</td>
+                    <td class="p-3"><span class="px-2 py-0.5 rounded text-[11px] font-bold bg-indigo-50 text-indigo-700">${escapeHtml(w.worker_type || '中工')}</span></td>
                     <td class="p-3 text-slate-600">RM ${Number(w.daily_rate).toFixed(0)}</td>
-                    <td class="p-3 font-mono font-bold text-indigo-700">${totalHours.toFixed(1)} 小时</td>
+                    <td class="p-3 font-mono font-bold text-indigo-700">${totalHours.toFixed(1)} h</td>
                     <td class="p-3 font-mono font-semibold text-slate-800">RM ${grossPay.toFixed(2)}</td>
                     <td class="p-3 font-mono font-semibold text-amber-600">- RM ${totalDeductions.toFixed(2)}</td>
                     <td class="p-3 font-mono font-black ${netPay >= 0 ? 'text-emerald-700' : 'text-rose-600'} text-base">
@@ -823,32 +1147,16 @@
                 </tr>
             `;
 
-            // 手机端自适应卡片
             cards.innerHTML += `
                 <div class="p-3 bg-white border border-slate-200 rounded-xl space-y-2">
                     <div class="flex items-center justify-between">
-                        <span class="font-bold text-slate-900">${escapeHtml(w.name)}</span>
-                        <span class="text-xs text-slate-400 font-mono">${escapeHtml(w.ic_passport)}</span>
+                        <span class="font-bold text-slate-900">${escapeHtml(w.name)} (${escapeHtml(w.worker_type || '中工')})</span>
+                        <span class="font-mono font-black ${netPay >= 0 ? 'text-emerald-700' : 'text-rose-600'}">RM ${netPay.toFixed(2)}</span>
                     </div>
                     <div class="grid grid-cols-3 gap-2 text-center text-xs py-1 bg-slate-50 rounded-lg">
-                        <div>
-                            <div class="text-slate-400">总工时</div>
-                            <div class="font-bold text-indigo-700">${totalHours.toFixed(1)} h</div>
-                        </div>
-                        <div>
-                            <div class="text-slate-400">应发工钱</div>
-                            <div class="font-bold text-slate-800">RM ${grossPay.toFixed(0)}</div>
-                        </div>
-                        <div>
-                            <div class="text-slate-400">已借/代扣</div>
-                            <div class="font-bold text-amber-600">RM ${totalDeductions.toFixed(0)}</div>
-                        </div>
-                    </div>
-                    <div class="flex items-center justify-between pt-1 border-t">
-                        <span class="text-xs font-semibold text-slate-500">本月应付现金:</span>
-                        <span class="font-mono font-black ${netPay >= 0 ? 'text-emerald-700' : 'text-rose-600'} text-base">
-                            RM ${netPay.toFixed(2)}
-                        </span>
+                        <div><div class="text-slate-400">工时</div><div class="font-bold text-indigo-700">${totalHours.toFixed(1)} h</div></div>
+                        <div><div class="text-slate-400">应发</div><div class="font-bold">RM ${grossPay.toFixed(0)}</div></div>
+                        <div><div class="text-slate-400">已借</div><div class="font-bold text-amber-600">RM ${totalDeductions.toFixed(0)}</div></div>
                     </div>
                 </div>
             `;
@@ -856,7 +1164,89 @@
     }
 
     // ==============================================================
-    // 6. Subcon 分包与垫付管理
+    // 4. 全量每日流水明细 (带工地、日期、工时、备注关联)
+    // ==============================================================
+    function renderDailyDetailTable() {
+        const workerIdFilter = document.getElementById('detailWorkerFilter').value;
+        const siteFilter = document.getElementById('detailSiteFilter').value;
+
+        // 1. 出勤明细
+        const attBody = document.getElementById('dailyAttendanceDetailBody');
+        attBody.innerHTML = '';
+        const filteredAtt = attendanceList.filter(item => {
+            if (workerIdFilter && item.worker_id !== parseInt(workerIdFilter)) return false;
+            if (siteFilter && item.site_name !== siteFilter) return false;
+            return true;
+        });
+
+        if (filteredAtt.length === 0) {
+            attBody.innerHTML = '<tr><td colspan="7" class="p-4 text-center text-slate-400">暂无出勤记录</td></tr>';
+        } else {
+            filteredAtt.forEach(att => {
+                const worker = workersList.find(w => w.id === att.worker_id) || {};
+                attBody.innerHTML += `
+                    <tr class="hover:bg-slate-50">
+                        <td class="p-2.5 font-mono text-slate-600">${att.work_date}</td>
+                        <td class="p-2.5 font-bold text-slate-900">${escapeHtml(worker.name || '未知工人')}</td>
+                        <td class="p-2.5"><span class="px-2 py-0.5 rounded font-semibold bg-slate-100 text-slate-700">📍 ${escapeHtml(att.site_name)}</span></td>
+                        <td class="p-2.5 font-bold font-mono text-indigo-700">${Number(att.total_hours).toFixed(1)} h</td>
+                        <td class="p-2.5 font-bold font-mono text-slate-800">RM ${Number(att.daily_wage).toFixed(2)}</td>
+                        <td class="p-2.5 text-slate-500">${escapeHtml(att.note || '-')}</td>
+                        <td class="p-2.5 text-right">
+                            <button onclick="deleteAttendanceRecord(${att.id})" class="text-rose-500 hover:underline">删除</button>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        // 2. 借款明细
+        const advBody = document.getElementById('dailyAdvanceDetailBody');
+        advBody.innerHTML = '';
+        const filteredAdv = advancesList.filter(item => {
+            if (workerIdFilter && item.worker_id !== parseInt(workerIdFilter)) return false;
+            return true;
+        });
+
+        if (filteredAdv.length === 0) {
+            advBody.innerHTML = '<tr><td colspan="6" class="p-4 text-center text-slate-400">暂无借款/扣款记录</td></tr>';
+        } else {
+            filteredAdv.forEach(adv => {
+                const worker = workersList.find(w => w.id === adv.worker_id) || {};
+                advBody.innerHTML += `
+                    <tr class="hover:bg-slate-50">
+                        <td class="p-2.5 font-mono text-slate-600">${adv.advance_date}</td>
+                        <td class="p-2.5 font-bold text-slate-900">${escapeHtml(worker.name || '未知工人')}</td>
+                        <td class="p-2.5"><span class="px-2 py-0.5 rounded font-semibold ${adv.advance_type === '借款' ? 'bg-amber-100 text-amber-800' : 'bg-rose-100 text-rose-800'}">${escapeHtml(adv.advance_type)}</span></td>
+                        <td class="p-2.5 font-black font-mono text-amber-700">RM ${Number(adv.amount).toFixed(2)}</td>
+                        <td class="p-2.5 text-slate-500">${escapeHtml(adv.note || '-')}</td>
+                        <td class="p-2.5 text-right">
+                            <button onclick="deleteAdvanceRecord(${adv.id})" class="text-rose-500 hover:underline">删除</button>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+    }
+
+    async function deleteAttendanceRecord(id) {
+        if (!confirm('确定删除该笔出勤记录？')) return;
+        await fetch(`${SUPABASE_URL}/attendance_records?id=eq.${id}`, { method: "DELETE", headers: reqHeaders });
+        await fetchAttendance();
+        renderWorkerMonthlySummary();
+        renderDailyDetailTable();
+    }
+
+    async function deleteAdvanceRecord(id) {
+        if (!confirm('确定删除该笔借款记录？')) return;
+        await fetch(`${SUPABASE_URL}/worker_advances?id=eq.${id}`, { method: "DELETE", headers: reqHeaders });
+        await fetchAdvances();
+        renderWorkerMonthlySummary();
+        renderDailyDetailTable();
+    }
+
+    // ==============================================================
+    // 5. Subcon 分包 (垫付人、Claimed 标记、合同修改)
     // ==============================================================
     async function fetchSubconData() {
         try {
@@ -868,11 +1258,8 @@
             subconContracts = await cRes.json();
             subconPayments = await pRes.json();
             subconVos = await vRes.json();
-
             renderSubconSelectors();
-        } catch (e) {
-            console.error(e);
-        }
+        } catch (e) { console.error(e); }
     }
 
     function renderSubconSelectors() {
@@ -889,22 +1276,17 @@
         const subcon_name = document.getElementById('subSubconName').value.trim();
         const base_amount = parseFloat(document.getElementById('subBaseAmount').value);
 
-        try {
-            const res = await fetch(`${SUPABASE_URL}/subcon_contracts`, {
-                method: "POST",
-                headers: reqHeaders,
-                body: JSON.stringify([{ project_name, subcon_name, base_amount, vo_amount: 0 }])
-            });
-            if (!res.ok) throw new Error("创建合同失败");
-            document.getElementById('subProjectName').value = '';
-            document.getElementById('subSubconName').value = '';
-            document.getElementById('subBaseAmount').value = '';
-            await fetchSubconData();
-            renderSubconDashboard();
-            alert(`分包工程 [${project_name}] 建立成功！`);
-        } catch (err) {
-            alert(err.message);
-        }
+        await fetch(`${SUPABASE_URL}/subcon_contracts`, {
+            method: "POST",
+            headers: reqHeaders,
+            body: JSON.stringify([{ project_name, subcon_name, base_amount, vo_amount: 0 }])
+        });
+        document.getElementById('subProjectName').value = '';
+        document.getElementById('subSubconName').value = '';
+        document.getElementById('subBaseAmount').value = '';
+        await fetchSubconData();
+        renderSubconDashboard();
+        alert(`分包合同 [${project_name}] 建立成功！`);
     }
 
     async function handleSubconPaymentSubmit(e) {
@@ -913,77 +1295,95 @@
         const payment_time = document.getElementById('payDateTime').value;
         const amount = parseFloat(document.getElementById('payAmount').value);
         const paid_by = document.getElementById('payPaidBy').value;
+        const payer_name = document.getElementById('payPayerName').value.trim() || 'Marco';
         const payment_method = document.getElementById('payMethod').value;
         const note = document.getElementById('payNote').value.trim();
 
-        if (!contract_id || isNaN(amount) || amount <= 0) {
-            alert('请完整填写项目与有效金额！');
-            return;
-        }
+        if (!contract_id || isNaN(amount) || amount <= 0) return alert('请选择项目并填写有效金额！');
 
-        try {
-            const res = await fetch(`${SUPABASE_URL}/subcon_payments`, {
-                method: "POST",
-                headers: reqHeaders,
-                body: JSON.stringify([{ contract_id, payment_time, amount, paid_by, payment_method, note }])
-            });
-            if (!res.ok) throw new Error("扣款保存失败");
-            document.getElementById('payAmount').value = '';
-            document.getElementById('payNote').value = '';
-            await fetchSubconData();
-            renderSubconDashboard();
-            alert('Subcon 提款记录已保存，已从工程款中扣减！');
-        } catch (err) {
-            alert(err.message);
-        }
+        await fetch(`${SUPABASE_URL}/subcon_payments`, {
+            method: "POST",
+            headers: reqHeaders,
+            body: JSON.stringify([{ contract_id, payment_time, amount, paid_by, payer_name, payment_method, note, is_claimed: false, claimed_pv: '' }])
+        });
+        document.getElementById('payAmount').value = '';
+        document.getElementById('payNote').value = '';
+        await fetchSubconData();
+        renderSubconDashboard();
+        alert('Subcon 领款记录已保存！');
     }
 
     function renderSubconDashboard() {
         const container = document.getElementById('subconCardsContainer');
         container.innerHTML = '';
 
-        if (subconContracts.length === 0) {
-            container.innerHTML = '<div class="text-xs text-slate-400 text-center py-6">暂无分包工程合同</div>';
-            return;
-        }
+        let privateSum = 0;
+        let unclaimedSum = 0;
+        let companySum = 0;
+        let contractAllSum = 0;
+
+        subconPayments.forEach(p => {
+            const amt = Number(p.amount || 0);
+            if (p.paid_by === '私人先给') {
+                privateSum += amt;
+                if (!p.is_claimed) unclaimedSum += amt;
+            } else {
+                companySum += amt;
+            }
+        });
+
+        document.getElementById('subconPrivateTotal').innerText = privateSum.toFixed(2);
+        document.getElementById('subconUnclaimedTotal').innerText = `待公司 Claim: RM ${unclaimedSum.toFixed(2)}`;
+        document.getElementById('subconCompanyTotal').innerText = companySum.toFixed(2);
 
         subconContracts.forEach(c => {
-            // 计算该合同全部 VO 追加
             let totalVO = 0;
             const currentVos = subconVos.filter(v => v.contract_id === c.id);
             currentVos.forEach(v => totalVO += Number(v.vo_amount || 0));
 
             const finalContractTotal = Number(c.base_amount) + totalVO;
+            contractAllSum += finalContractTotal;
 
-            // 计算该合同全部已付
             let paidTotal = 0;
             const currentPayments = subconPayments.filter(p => p.contract_id === c.id);
             currentPayments.forEach(p => paidTotal += Number(p.amount || 0));
 
             const balance = finalContractTotal - paidTotal;
 
-            // 渲染支出明细清单
             let paymentRowsHtml = '';
             if (currentPayments.length === 0) {
-                paymentRowsHtml = '<div class="text-xs text-slate-400 py-2">尚未有领款/垫付记录</div>';
+                paymentRowsHtml = '<div class="text-xs text-slate-400 py-2">尚未有领款记录</div>';
             } else {
                 currentPayments.forEach(p => {
                     const isPrivate = p.paid_by === '私人先给';
-                    const badgeClass = isPrivate ? 'bg-amber-100 text-amber-800' : 'bg-blue-100 text-blue-800';
                     const timeFormatted = p.payment_time.replace('T', ' ').slice(0, 16);
 
+                    // 报销状态
+                    let claimHtml = '';
+                    if (isPrivate) {
+                        if (p.is_claimed) {
+                            claimHtml = `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800">✅ Claimed (${escapeHtml(p.claimed_pv)})</span>`;
+                        } else {
+                            claimHtml = `<button onclick="openClaimModal('subcon', ${p.id})" class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500 hover:bg-amber-600 text-white cursor-pointer">📌 书记点击 Claim</button>`;
+                        }
+                    }
+
                     paymentRowsHtml += `
-                        <div class="flex flex-col sm:flex-row sm:items-center justify-between py-2 border-b border-slate-100 text-xs gap-1">
-                            <div class="space-y-0.5">
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between py-2 border-b border-slate-100 text-xs gap-1.5">
+                            <div>
                                 <div class="flex items-center gap-1.5 flex-wrap">
                                     <span class="font-mono text-slate-400">${timeFormatted}</span>
-                                    <span class="px-1.5 py-0.5 rounded font-bold ${badgeClass}">${escapeHtml(p.paid_by)}</span>
+                                    <span class="px-1.5 py-0.5 rounded font-bold ${isPrivate ? 'bg-amber-100 text-amber-800' : 'bg-blue-100 text-blue-800'}">
+                                        ${escapeHtml(p.paid_by)} (${escapeHtml(p.payer_name || 'Marco')})
+                                    </span>
                                     <span class="font-bold text-slate-700">[${escapeHtml(p.payment_method)}]</span>
+                                    ${claimHtml}
                                 </div>
-                                <div class="text-slate-500">${p.note ? escapeHtml(p.note) : '无备注'}</div>
+                                <div class="text-slate-500 mt-0.5">${p.note ? escapeHtml(p.note) : '无备注'}</div>
                             </div>
-                            <div class="font-mono font-bold text-rose-600 text-sm self-end sm:self-center">
-                                - RM ${Number(p.amount).toFixed(2)}
+                            <div class="flex items-center gap-3 self-end sm:self-center">
+                                <span class="font-mono font-bold text-rose-600 text-sm">- RM ${Number(p.amount).toFixed(2)}</span>
+                                <button onclick="deleteSubconPayment(${p.id})" class="text-slate-300 hover:text-rose-500 text-xs">✕</button>
                             </div>
                         </div>
                     `;
@@ -996,48 +1396,77 @@
                 <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b pb-3">
                     <div>
                         <span class="text-base font-black text-slate-900">${escapeHtml(c.project_name)}</span>
-                        <span class="text-xs font-bold text-indigo-600 ml-2">承包方: ${escapeHtml(c.subcon_name)}</span>
+                        <span class="text-xs font-bold text-indigo-600 ml-2">承包: ${escapeHtml(c.subcon_name)}</span>
                     </div>
-                    <button type="button" onclick="openVoModal(${c.id})" class="px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs font-bold rounded-lg self-start sm:self-auto">
-                        ➕ 加 VO (追加款)
-                    </button>
+                    <div class="flex items-center gap-2">
+                        <button type="button" onclick="openEditSubconContractModal(${c.id})" class="px-3 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-lg">
+                            ✏️ 修改合同
+                        </button>
+                        <button type="button" onclick="openVoModal(${c.id})" class="px-3 py-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs font-bold rounded-lg">
+                            ➕ 加 VO
+                        </button>
+                    </div>
                 </div>
 
-                <!-- 金额核算看板 -->
                 <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center text-xs py-2 bg-slate-50 rounded-xl">
-                    <div>
-                        <div class="text-slate-400">原合同金额</div>
-                        <div class="font-bold text-slate-700 font-mono text-sm">RM ${Number(c.base_amount).toFixed(2)}</div>
-                    </div>
-                    <div>
-                        <div class="text-slate-400">VO 追加总计</div>
-                        <div class="font-bold text-indigo-600 font-mono text-sm">+ RM ${totalVO.toFixed(2)}</div>
-                    </div>
-                    <div>
-                        <div class="text-slate-400">已支付总额</div>
-                        <div class="font-bold text-rose-600 font-mono text-sm">- RM ${paidTotal.toFixed(2)}</div>
-                    </div>
-                    <div>
-                        <div class="text-slate-400 font-semibold">剩余应付尾款</div>
-                        <div class="font-black ${balance >= 0 ? 'text-emerald-700' : 'text-rose-700'} font-mono text-sm">
-                            RM ${balance.toFixed(2)}
-                        </div>
-                    </div>
+                    <div><div class="text-slate-400">原合同金额</div><div class="font-bold font-mono text-sm">RM ${Number(c.base_amount).toFixed(2)}</div></div>
+                    <div><div class="text-slate-400">VO 追加</div><div class="font-bold text-indigo-600 font-mono text-sm">+ RM ${totalVO.toFixed(2)}</div></div>
+                    <div><div class="text-slate-400">已付进度款</div><div class="font-bold text-rose-600 font-mono text-sm">- RM ${paidTotal.toFixed(2)}</div></div>
+                    <div><div class="text-slate-400 font-semibold">剩余尾款</div><div class="font-black ${balance >= 0 ? 'text-emerald-700' : 'text-rose-700'} font-mono text-sm">RM ${balance.toFixed(2)}</div></div>
                 </div>
 
-                <!-- 历史提款扣款流水 -->
                 <div class="space-y-1 pt-1">
-                    <span class="text-xs font-bold text-slate-700">先拿款与垫付明细：</span>
-                    <div class="max-h-48 overflow-y-auto pr-1">
-                        ${paymentRowsHtml}
-                    </div>
+                    <span class="text-xs font-bold text-slate-700">支出明细流水：</span>
+                    <div class="max-h-56 overflow-y-auto pr-1">${paymentRowsHtml}</div>
                 </div>
             `;
             container.appendChild(card);
         });
+
+        document.getElementById('subconAllContractsTotal').innerText = contractAllSum.toFixed(2);
     }
 
-    // VO 弹窗
+    // Subcon 修改弹窗
+    function openEditSubconContractModal(id) {
+        const c = subconContracts.find(item => item.id === id);
+        if (!c) return;
+        document.getElementById('editSubContractId').value = c.id;
+        document.getElementById('editSubProjectName').value = c.project_name;
+        document.getElementById('editSubSubconName').value = c.subcon_name;
+        document.getElementById('editSubBaseAmount').value = c.base_amount;
+        document.getElementById('editSubconContractModal').classList.remove('hidden');
+    }
+
+    function closeEditSubconContractModal() {
+        document.getElementById('editSubconContractModal').classList.add('hidden');
+    }
+
+    async function submitEditSubconContract() {
+        const id = document.getElementById('editSubContractId').value;
+        const project_name = document.getElementById('editSubProjectName').value.trim();
+        const subcon_name = document.getElementById('editSubSubconName').value.trim();
+        const base_amount = parseFloat(document.getElementById('editSubBaseAmount').value);
+
+        if (!project_name || isNaN(base_amount)) return alert("请填写完整！");
+
+        await fetch(`${SUPABASE_URL}/subcon_contracts?id=eq.${id}`, {
+            method: "PATCH",
+            headers: reqHeaders,
+            body: JSON.stringify({ project_name, subcon_name, base_amount })
+        });
+        closeEditSubconContractModal();
+        await fetchSubconData();
+        renderSubconDashboard();
+        alert("分包工程合同已修改！");
+    }
+
+    async function deleteSubconPayment(id) {
+        if (!confirm('确定删除该笔 Subcon 领款记录？')) return;
+        await fetch(`${SUPABASE_URL}/subcon_payments?id=eq.${id}`, { method: "DELETE", headers: reqHeaders });
+        await fetchSubconData();
+        renderSubconDashboard();
+    }
+
     function openVoModal(contractId) {
         document.getElementById('voContractId').value = contractId;
         const now = new Date();
@@ -1046,10 +1475,7 @@
         document.getElementById('voAmt').value = '';
         document.getElementById('voModal').classList.remove('hidden');
     }
-
-    function closeVoModal() {
-        document.getElementById('voModal').classList.add('hidden');
-    }
+    function closeVoModal() { document.getElementById('voModal').classList.add('hidden'); }
 
     async function submitVoRecord() {
         const contract_id = parseInt(document.getElementById('voContractId').value);
@@ -1057,25 +1483,186 @@
         const vo_description = document.getElementById('voDesc').value.trim();
         const vo_amount = parseFloat(document.getElementById('voAmt').value);
 
-        if (!vo_description || isNaN(vo_amount) || vo_amount <= 0) {
-            alert('请完整填写 VO 说明及金额！');
+        if (!vo_description || isNaN(vo_amount) || vo_amount <= 0) return alert('请完整填写 VO！');
+
+        await fetch(`${SUPABASE_URL}/subcon_vo_records`, {
+            method: "POST",
+            headers: reqHeaders,
+            body: JSON.stringify([{ contract_id, vo_date, vo_description, vo_amount }])
+        });
+        closeVoModal();
+        await fetchSubconData();
+        renderSubconDashboard();
+    }
+
+    // ==============================================================
+    // 6. Marco 现金收支备用金模块 (IN & OUT)
+    // ==============================================================
+    async function fetchPettyCash() {
+        try {
+            const res = await fetch(`${SUPABASE_URL}/marco_petty_cash?order=record_date.desc,record_time.desc`, { headers: reqHeaders });
+            pettyCashList = await res.json();
+        } catch (e) { console.error(e); }
+    }
+
+    function togglePettyCategory() {
+        const type = document.getElementById('pettyTransType').value;
+        const cat = document.getElementById('pettyCategory');
+        if (type === 'IN') {
+            cat.innerHTML = `
+                <option value="卖废铁现金">卖工地废铁/废钢筋</option>
+                <option value="退还押金">退还押金/保证金</option>
+                <option value="现场收到款">现场收取客户现金</option>
+                <option value="其他收入">其他现金收入</option>
+            `;
+        } else {
+            cat.innerHTML = `
+                <option value="买料/工具">买料 / 现场五金工具</option>
+                <option value="维修/安装">机械维修 / 安装费</option>
+                <option value="工人杂支">现场杂支 / 伙食水钱</option>
+                <option value="其他">其他垫付</option>
+            `;
+        }
+    }
+
+    async function handlePettyCashSubmit(e) {
+        e.preventDefault();
+        const trans_type = document.getElementById('pettyTransType').value;
+        const record_date = document.getElementById('pettyDate').value;
+        const record_time = document.getElementById('pettyTime').value;
+        const amount = parseFloat(document.getElementById('pettyAmount').value);
+        const category = document.getElementById('pettyCategory').value;
+        const receipt_no = document.getElementById('pettyReceiptNo').value.trim();
+        const description = document.getElementById('pettyDescription').value.trim();
+
+        if (isNaN(amount) || amount <= 0 || !description) return alert('请完整填写金额与原因！');
+
+        await fetch(`${SUPABASE_URL}/marco_petty_cash`, {
+            method: "POST",
+            headers: reqHeaders,
+            body: JSON.stringify([{ record_date, record_time, trans_type, amount, category, receipt_no, description, is_claimed: false, pv_number: '' }])
+        });
+
+        document.getElementById('pettyAmount').value = '';
+        document.getElementById('pettyReceiptNo').value = '';
+        document.getElementById('pettyDescription').value = '';
+
+        await fetchPettyCash();
+        renderPettyCashTable();
+        alert('备用金收支已成功录入！');
+    }
+
+    function renderPettyCashTable() {
+        const tbody = document.getElementById('pettyCashTableBody');
+        tbody.innerHTML = '';
+
+        let outTotal = 0;
+        let inTotal = 0;
+        let unclaimedOut = 0;
+        let unclaimedIn = 0;
+
+        pettyCashList.forEach(item => {
+            const amt = Number(item.amount || 0);
+            if (item.trans_type === 'OUT') {
+                outTotal += amt;
+                if (!item.is_claimed) unclaimedOut += amt;
+            } else {
+                inTotal += amt;
+                if (!item.is_claimed) unclaimedIn += amt;
+            }
+        });
+
+        document.getElementById('pettyOutTotal').innerText = outTotal.toFixed(2);
+        document.getElementById('pettyInTotal').innerText = inTotal.toFixed(2);
+        const netClaim = unclaimedOut - unclaimedIn;
+        document.getElementById('pettyNetClaim').innerText = netClaim.toFixed(2);
+
+        if (pettyCashList.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="8" class="p-6 text-center text-slate-400">暂无备用金记录</td></tr>';
             return;
         }
 
-        try {
-            const res = await fetch(`${SUPABASE_URL}/subcon_vo_records`, {
-                method: "POST",
+        pettyCashList.forEach(item => {
+            const isOut = item.trans_type === 'OUT';
+            const typeBadge = isOut 
+                ? `<span class="px-2 py-0.5 rounded font-bold text-[11px] bg-rose-100 text-rose-800">🔴 垫付 OUT</span>` 
+                : `<span class="px-2 py-0.5 rounded font-bold text-[11px] bg-emerald-100 text-emerald-800">🟢 收现 IN</span>`;
+
+            let claimHtml = '';
+            if (item.is_claimed) {
+                claimHtml = `<span class="px-2 py-0.5 rounded text-[11px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-200">✅ Claimed (${escapeHtml(item.pv_number)})</span>`;
+            } else {
+                claimHtml = `<button onclick="openClaimModal('petty', ${item.id})" class="px-2.5 py-1 bg-amber-500 hover:bg-amber-600 text-white font-bold rounded-lg text-xs cursor-pointer">📌 书记 Claim</button>`;
+            }
+
+            tbody.innerHTML += `
+                <tr class="hover:bg-slate-50">
+                    <td class="p-2.5 font-mono text-slate-500 text-xs">${item.record_date} ${item.record_time}</td>
+                    <td class="p-2.5">${typeBadge}</td>
+                    <td class="p-2.5 font-semibold text-slate-700">${escapeHtml(item.category)}</td>
+                    <td class="p-2.5 font-bold text-slate-900">${escapeHtml(item.description)}</td>
+                    <td class="p-2.5 font-mono text-slate-500 text-xs">${item.receipt_no ? escapeHtml(item.receipt_no) : '-'}</td>
+                    <td class="p-2.5 font-black font-mono ${isOut ? 'text-rose-600' : 'text-emerald-700'} text-sm">
+                        ${isOut ? '-' : '+'} RM ${Number(item.amount).toFixed(2)}
+                    </td>
+                    <td class="p-2.5">${claimHtml}</td>
+                    <td class="p-2.5 text-right space-x-2">
+                        <button onclick="deletePettyCash(${item.id})" class="text-rose-500 hover:underline text-xs">删除</button>
+                    </td>
+                </tr>
+            `;
+        });
+    }
+
+    async function deletePettyCash(id) {
+        if (!confirm('确定删除该笔备用金流水？')) return;
+        await fetch(`${SUPABASE_URL}/marco_petty_cash?id=eq.${id}`, { method: "DELETE", headers: reqHeaders });
+        await fetchPettyCash();
+        renderPettyCashTable();
+    }
+
+    // ==============================================================
+    // 7. 通用 Claim 弹窗与 PV Number 绑定
+    // ==============================================================
+    function openClaimModal(targetType, id) {
+        document.getElementById('claimTargetType').value = targetType;
+        document.getElementById('claimTargetId').value = id;
+        document.getElementById('claimPvInput').value = '';
+        document.getElementById('claimPvModal').classList.remove('hidden');
+        document.getElementById('claimPvInput').focus();
+    }
+
+    function closeClaimPvModal() {
+        document.getElementById('claimPvModal').classList.add('hidden');
+    }
+
+    async function submitClaimPv() {
+        const targetType = document.getElementById('claimTargetType').value;
+        const id = document.getElementById('claimTargetId').value;
+        const pv = document.getElementById('claimPvInput').value.trim();
+
+        if (!pv) return alert("必须填写公司 PV 凭证编号，才能完成 Claimed 标记！");
+
+        if (targetType === 'subcon') {
+            await fetch(`${SUPABASE_URL}/subcon_payments?id=eq.${id}`, {
+                method: "PATCH",
                 headers: reqHeaders,
-                body: JSON.stringify([{ contract_id, vo_date, vo_description, vo_amount }])
+                body: JSON.stringify({ is_claimed: true, claimed_pv: pv })
             });
-            if (!res.ok) throw new Error("VO 添加失败");
-            closeVoModal();
             await fetchSubconData();
             renderSubconDashboard();
-            alert('VO 追加工程款已成功记录！');
-        } catch (err) {
-            alert(err.message);
+        } else {
+            await fetch(`${SUPABASE_URL}/marco_petty_cash?id=eq.${id}`, {
+                method: "PATCH",
+                headers: reqHeaders,
+                body: JSON.stringify({ is_claimed: true, pv_number: pv, claimed_at: new Date().toISOString() })
+            });
+            await fetchPettyCash();
+            renderPettyCashTable();
         }
+
+        closeClaimPvModal();
+        alert(`✅ 报销登记成功！已绑定凭证编号: ${pv}`);
     }
 
     function escapeHtml(text) {
