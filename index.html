@@ -19,7 +19,7 @@
             <div>
                 <h1 class="text-lg sm:text-2xl font-black tracking-tight text-slate-900 flex items-center gap-2">
                     🏗️ LIM SHENG CONSTRUCTION
-                    <span id="connStatusBadge" class="text-xs px-2 py-0.5 rounded-full font-bold bg-amber-100 text-amber-700">连接中...</span>
+                    <span id="connStatusBadge" class="text-xs px-2 py-0.5 rounded-full font-bold bg-amber-100 text-amber-700">正在连接...</span>
                 </h1>
                 <p class="text-[11px] sm:text-xs text-slate-500 mt-0.5">现场劳务核算 · 工人出勤流水 · 现金与分包管理</p>
             </div>
@@ -72,7 +72,7 @@
 
             <form onsubmit="handleAttendanceSubmit(event)" class="space-y-3.5">
                 
-                <!-- 勾选出勤工人 (第一行) -->
+                <!-- 勾选出勤工人 (第一行置顶) -->
                 <div class="bg-slate-50 p-2.5 sm:p-3 rounded-xl border border-slate-200 space-y-2">
                     <div class="flex items-center justify-between">
                         <label class="text-xs font-bold text-slate-800">1. 勾选今天出勤的工人 (多选)：</label>
@@ -221,7 +221,7 @@
     </div>
 
     <!-- ============================================================== -->
-    <!-- SECTION 2: 全量打卡明细 (带工地搜索、工钱统计看板与按月收缩)       -->
+    <!-- SECTION 2: 全量打卡明细 (带工地搜索与工钱汇总)                   -->
     <!-- ============================================================== -->
     <div id="tabDailyDetail" class="space-y-4 hidden">
         <div class="bg-white rounded-2xl shadow-sm p-3.5 sm:p-5 space-y-3">
@@ -250,10 +250,9 @@
                     </div>
                 </div>
 
-                <!-- 选定工地后的专属看板 -->
                 <div id="siteCostSummaryBox" class="hidden pt-2 border-t border-indigo-200 flex items-center justify-between">
                     <div>
-                        <span class="text-xs font-bold text-indigo-900" id="summarySiteNameLabel">Kamunting 工业厂房</span>
+                        <span class="text-xs font-bold text-indigo-900" id="summarySiteNameLabel">工地</span>
                         <span class="text-[11px] text-slate-500 ml-1">用工核算总计:</span>
                     </div>
                     <div class="flex items-center gap-4 text-xs">
@@ -276,7 +275,7 @@
     </div>
 
     <!-- ============================================================== -->
-    <!-- SECTION 3: Subcon 分包 (管理模式展示)                          -->
+    <!-- SECTION 3: Subcon 分包                                         -->
     <!-- ============================================================== -->
     <div id="tabSubcon" class="space-y-4 hidden">
         <div class="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
@@ -383,7 +382,7 @@
     </div>
 
     <!-- ============================================================== -->
-    <!-- SECTION 4: Marco 现金与 Claim (管理模式展示)                   -->
+    <!-- SECTION 4: Marco 现金与 Claim                                  -->
     <!-- ============================================================== -->
     <div id="tabPettyCash" class="space-y-4 hidden">
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
@@ -402,7 +401,7 @@
         </div>
 
         <div class="bg-white p-3.5 sm:p-5 rounded-2xl shadow-sm space-y-3">
-            <h2 class="text-sm sm:text-base font-bold text-slate-900 border-b pb-2">✍️ 记录现金收支 (买料/维修垫付 或 工地收现)</h2>
+            <h2 class="text-sm sm:text-base font-bold text-slate-900 border-b pb-2">✍️ 记录现金收支</h2>
             <form onsubmit="handlePettyCashSubmit(event)" class="space-y-3">
                 <div class="grid grid-cols-1 sm:grid-cols-4 gap-2.5">
                     <div>
@@ -634,6 +633,7 @@
 </div>
 
 <script>
+    // 关键修正：确保末尾绝对没有斜杠，防止双斜杠破坏路由
     const SUPABASE_URL = "https://xiplmlalurpnrnzeaywp.supabase.co/rest/v1";[cite: 1]
     const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhpcGxtbGFsdXJwbnJuemVheXdwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg0Mjk2NjYsImV4cCI6MjEwNDAwNTY2Nn0.uIRTO0MAvQHGzQzdWwWZCufeMsnuU9LQTHUOI60lTXQ";[cite: 1]
 
@@ -655,53 +655,54 @@
 
     let isAdminUnlocked = localStorage.getItem('limsheng_admin_unlocked') === 'true';
 
-    // 无论任何单项报错，不阻断页面主线程
-    async function safeFetch(url) {
+    // 数据容错加载器
+    async function safeFetch(path) {
         try {
-            const res = await fetch(url, { headers: reqHeaders });
+            const res = await fetch(`${SUPABASE_URL}/${path}`, { headers: reqHeaders });
             if (!res.ok) {
-                console.warn(`[HTTP ${res.status}] 数据获取受阻:`, url);
+                console.warn(`[HTTP ${res.status}] 数据获取受阻:`, path);
                 return [];
             }
             return await res.json();
         } catch (e) {
-            console.warn("网络异常:", url, e);
+            console.warn("网络异常:", path, e);
             return [];
         }
     }
 
-    // 优先执行：确保日期与时间填入
-    function initSystemDates() {
+    // 第一优先级：页面一加载立刻填充日期，绝不挂死
+    function applyDefaultDatesNow() {
         const now = new Date();
         const y = now.getFullYear();
         const m = String(now.getMonth() + 1).padStart(2, '0');
         const d = String(now.getDate()).padStart(2, '0');
         const todayStr = `${y}-${m}-${d}`;
 
-        const setSafeVal = (id, val) => {
+        const setVal = (id, val) => {
             const el = document.getElementById(id);
             if (el) el.value = val;
         };
 
-        setSafeVal('attWorkDate', todayStr);
-        setSafeVal('advDate', todayStr);
-        setSafeVal('subContractDate', todayStr);
-        setSafeVal('pettyDate', todayStr);
+        setVal('attWorkDate', todayStr);
+        setVal('advDate', todayStr);
+        setVal('subContractDate', todayStr);
+        setVal('pettyDate', todayStr);
 
-        setSafeVal('filterYearSelect', String(y));
-        setSafeVal('filterMonthSelect', m);
+        setVal('filterYearSelect', String(y));
+        setVal('filterMonthSelect', m);
 
         const h = String(now.getHours()).padStart(2, '0');
         const min = String(now.getMinutes()).padStart(2, '0');
-        setSafeVal('payDateTime', `${todayStr}T${h}:${min}`);
-        setSafeVal('pettyTime', `${h}:${min}`);
+        setVal('payDateTime', `${todayStr}T${h}:${min}`);
+        setVal('pettyTime', `${h}:${min}`);
     }
 
-    // 立即执行初始化，绝不卡住
-    initSystemDates();
+    // 立即执行一次
+    applyDefaultDatesNow();
 
-    window.addEventListener('DOMContentLoaded', () => {
-        initSystemDates();
+    // DOM 挂载时再次确认并启动同步
+    document.addEventListener('DOMContentLoaded', () => {
+        applyDefaultDatesNow();
         applyAdminState();
         refreshAll();
     });
@@ -735,7 +736,7 @@
         } catch (err) {
             console.error("刷新失败:", err);
             if (badge) {
-                badge.innerText = "离线/异常";
+                badge.innerText = "离线/重试";
                 badge.className = "text-xs px-2 py-0.5 rounded-full font-bold bg-rose-100 text-rose-700";
             }
         }
@@ -839,13 +840,13 @@
     // 1. 工人与工地
     // ==============================================================
     async function fetchWorkers() {
-        workersList = await safeFetch(`${SUPABASE_URL}/workers?status=eq.active&order=name.asc`);
+        workersList = await safeFetch(`workers?status=eq.active&order=name.asc`);
         renderWorkerSelectors();
         renderWorkerAdminList();
     }
 
     async function fetchSites() {
-        sitesList = await safeFetch(`${SUPABASE_URL}/job_sites?order=id.asc`);
+        sitesList = await safeFetch(`job_sites?order=id.asc`);
         renderSiteSelectors();
     }
 
@@ -1067,7 +1068,7 @@
     // 2. 打卡出勤与借支
     // ==============================================================
     async function fetchAttendance() {
-        attendanceList = await safeFetch(`${SUPABASE_URL}/attendance_records?order=work_date.desc,id.desc`);
+        attendanceList = await safeFetch(`attendance_records?order=work_date.desc,id.desc`);
     }
 
     async function handleAttendanceSubmit(e) {
@@ -1129,7 +1130,7 @@
     }
 
     async function fetchAdvances() {
-        advancesList = await safeFetch(`${SUPABASE_URL}/worker_advances?order=advance_date.desc,id.desc`);
+        advancesList = await safeFetch(`worker_advances?order=advance_date.desc,id.desc`);
     }
 
     function setAdvAmount(val) {
@@ -1444,9 +1445,9 @@
     // ==============================================================
     async function fetchSubconData() {
         const [cData, pData, vData] = await Promise.all([
-            safeFetch(`${SUPABASE_URL}/subcon_contracts?order=id.desc`),
-            safeFetch(`${SUPABASE_URL}/subcon_payments?order=payment_time.desc`),
-            safeFetch(`${SUPABASE_URL}/subcon_vo_records?order=vo_date.desc`)
+            safeFetch(`subcon_contracts?order=id.desc`),
+            safeFetch(`subcon_payments?order=payment_time.desc`),
+            safeFetch(`subcon_vo_records?order=vo_date.desc`)
         ]);
         subconContracts = cData;
         subconPayments = pData;
@@ -1661,7 +1662,7 @@
     // 5. Marco 现金
     // ==============================================================
     async function fetchPettyCash() {
-        pettyCashList = await safeFetch(`${SUPABASE_URL}/marco_petty_cash?order=record_date.desc,record_time.desc`);
+        pettyCashList = await safeFetch(`marco_petty_cash?order=record_date.desc,record_time.desc`);
     }
 
     function togglePettyCategory() {
