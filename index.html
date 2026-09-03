@@ -33,32 +33,32 @@
             </div>
         </div>
 
-        <!-- 导航标签页 -->
-        <div class="flex border-b border-slate-200 gap-1 sm:gap-2 overflow-x-auto pb-1">
+        <!-- 导航标签页：改为多行自适应排列，取消横向滚动 -->
+        <div class="flex flex-wrap border-b border-slate-200 gap-1.5 pb-2">
             <button id="navWorkersBtn" type="button" onclick="switchMainTab('workers')"
-                class="px-3 sm:px-4 py-2.5 text-xs sm:text-sm font-bold border-b-2 border-indigo-600 text-indigo-600 transition flex items-center gap-1.5 whitespace-nowrap cursor-pointer">
+                class="px-3 sm:px-4 py-2 text-xs sm:text-sm font-bold border-b-2 border-indigo-600 text-indigo-600 transition flex items-center gap-1.5 cursor-pointer">
                 👷 出勤打卡与月结
             </button>
             <button id="navDailyDetailBtn" type="button" onclick="switchMainTab('dailyDetail')"
-                class="px-3 sm:px-4 py-2.5 text-xs sm:text-sm font-bold border-b-2 border-transparent text-slate-500 hover:text-indigo-600 transition flex items-center gap-1.5 whitespace-nowrap cursor-pointer">
-                📋 工人打卡/借款流水明细
+                class="px-3 sm:px-4 py-2 text-xs sm:text-sm font-bold border-b-2 border-transparent text-slate-500 hover:text-indigo-600 transition flex items-center gap-1.5 cursor-pointer">
+                📋 工人打卡/借款明细
             </button>
-            <!-- 默认隐藏的敏感模块标签 -->
+            <!-- 默认完全隐藏的敏感模块标签 -->
             <button id="navSubconBtn" type="button" onclick="switchMainTab('subcon')"
-                class="px-3 sm:px-4 py-2.5 text-xs sm:text-sm font-bold border-b-2 border-transparent text-slate-500 hover:text-indigo-600 transition items-center gap-1.5 whitespace-nowrap cursor-pointer hidden">
+                class="px-3 sm:px-4 py-2 text-xs sm:text-sm font-bold border-b-2 border-transparent text-slate-500 hover:text-indigo-600 transition items-center gap-1.5 cursor-pointer hidden">
                 📑 Subcon 分包与垫付
             </button>
             <button id="navPettyCashBtn" type="button" onclick="switchMainTab('pettyCash')"
-                class="px-3 sm:px-4 py-2.5 text-xs sm:text-sm font-bold border-b-2 border-transparent text-slate-500 hover:text-indigo-600 transition items-center gap-1.5 whitespace-nowrap cursor-pointer hidden">
-                💼 Marco 现金收支与Claim
+                class="px-3 sm:px-4 py-2 text-xs sm:text-sm font-bold border-b-2 border-transparent text-slate-500 hover:text-indigo-600 transition items-center gap-1.5 cursor-pointer hidden">
+                💼 Marco 现金与Claim
             </button>
             <button id="navSiteSearchBtn" type="button" onclick="switchMainTab('siteSearch')"
-                class="px-3 sm:px-4 py-2.5 text-xs sm:text-sm font-bold border-b-2 border-transparent text-slate-500 hover:text-indigo-600 transition flex items-center gap-1.5 whitespace-nowrap cursor-pointer">
+                class="px-3 sm:px-4 py-2 text-xs sm:text-sm font-bold border-b-2 border-transparent text-slate-500 hover:text-indigo-600 transition flex items-center gap-1.5 cursor-pointer">
                 🔍 工地工钱总和搜索
             </button>
             <button id="navManageBtn" type="button" onclick="switchMainTab('manage')"
-                class="px-3 sm:px-4 py-2.5 text-xs sm:text-sm font-bold border-b-2 border-transparent text-slate-500 hover:text-indigo-600 transition flex items-center gap-1.5 whitespace-nowrap cursor-pointer">
-                ⚙️ 名录管理 (工人/工地)
+                class="px-3 sm:px-4 py-2 text-xs sm:text-sm font-bold border-b-2 border-transparent text-slate-500 hover:text-indigo-600 transition flex items-center gap-1.5 cursor-pointer">
+                ⚙️ 名录管理
             </button>
         </div>
     </div>
@@ -262,7 +262,7 @@
     </div>
 
     <!-- ============================================================== -->
-    <!-- SECTION 3: Subcon 分包与垫付管理 (默认隐藏，需密码解锁)          -->
+    <!-- SECTION 3: Subcon 分包与垫付管理 (默认完全隐藏，需密码解锁)      -->
     <!-- ============================================================== -->
     <div id="tabSubcon" class="space-y-4 sm:space-y-6 hidden">
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -374,7 +374,7 @@
     </div>
 
     <!-- ============================================================== -->
-    <!-- SECTION 4: Marco 现金收支与 Claim 模块 (默认隐藏，需密码解锁)    -->
+    <!-- SECTION 4: Marco 现金收支与 Claim 模块 (默认完全隐藏，需密码解锁) -->
     <!-- ============================================================== -->
     <div id="tabPettyCash" class="space-y-4 sm:space-y-6 hidden">
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -743,7 +743,7 @@
     let subconVos = [];
     let pettyCashList = [];
 
-    // 管理模式解锁状态
+    // 管理模式解锁状态 (默认未解锁)
     let isManagementUnlocked = false;
 
     function initSystemDates() {
@@ -788,7 +788,7 @@
         populateSiteSearchDropdown();
     }
 
-    // 管理模式解锁逻辑（密码2321）
+    // 管理模式解锁逻辑（密码 2321）
     function toggleManagementMode() {
         if (isManagementUnlocked) {
             isManagementUnlocked = false;
@@ -814,9 +814,9 @@
     }
 
     function switchMainTab(tab) {
-        // 如果点击的是受保护模块但未解锁，给出提示
+        // 如果点击的是受保护模块但未解锁，给出提示并拦截
         if ((tab === 'subcon' || tab === 'pettyCash') && !isManagementUnlocked) {
-            alert("🔒 此模块受密码保护，请先点击右上角“管理模式”输入密码解锁！");
+            alert("🔒 此模块已隐藏保护，请先点击右上角“管理模式”输入密码解锁！");
             return;
         }
 
@@ -826,10 +826,10 @@
             if(!btn || !panel) return;
             if (t.toLowerCase() === tab.toLowerCase()) {
                 panel.classList.remove('hidden');
-                btn.className = "px-3 sm:px-4 py-2.5 text-xs sm:text-sm font-bold border-b-2 border-indigo-600 text-indigo-600 transition flex items-center gap-1.5 whitespace-nowrap cursor-pointer";
+                btn.className = "px-3 sm:px-4 py-2 text-xs sm:text-sm font-bold border-b-2 border-indigo-600 text-indigo-600 transition flex items-center gap-1.5 cursor-pointer";
             } else {
                 panel.classList.add('hidden');
-                btn.className = "px-3 sm:px-4 py-2.5 text-xs sm:text-sm font-bold border-b-2 border-transparent text-slate-500 hover:text-indigo-600 transition flex items-center gap-1.5 whitespace-nowrap cursor-pointer";
+                btn.className = "px-3 sm:px-4 py-2 text-xs sm:text-sm font-bold border-b-2 border-transparent text-slate-500 hover:text-indigo-600 transition flex items-center gap-1.5 cursor-pointer";
             }
         });
     }
